@@ -107,7 +107,9 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: "Could not find scripts/run_predict_pipeline.py.",
-        hint: "Run `npm run dev` from the YTBTrendingDashboard folder, or set DASHBOARD_ROOT to that folder. cwd was: " + process.cwd(),
+        hint:
+          "Run `npm run dev` from the YTBTrendingDashboard folder, or set DASHBOARD_ROOT to that folder. cwd was: " +
+          process.cwd(),
       },
       { status: 500 }
     );
