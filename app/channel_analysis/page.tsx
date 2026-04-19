@@ -2,9 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -139,6 +139,15 @@ export default function ChannelAnalysis() {
     y?: number;
     payload?: { value: string };
   };
+  const formatDDMMYY = (iso: string) => {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+  };
+
   const ThumbnailXTick = (props: AxisTickProps) => {
     const { x = 0, y = 0, payload } = props;
     const v = payload ? thumbnailByVideoId.get(payload.value) : undefined;
@@ -156,6 +165,17 @@ export default function ChannelAnalysis() {
             style={{ borderRadius: 6 }}
           />
         </a>
+        <text
+          x={w / 2}
+          y={h + 14}
+          textAnchor="middle"
+          fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
+          fontSize={10}
+          fontWeight={600}
+          fill="#475569"
+        >
+          {formatDDMMYY(v.publishedAt)}
+        </text>
       </g>
     );
   };
@@ -288,17 +308,18 @@ export default function ChannelAnalysis() {
                     </div>
                     <div
                       className="w-full"
-                      style={{ height: isLast ? 200 : 130 }}
+                      style={{ height: isLast ? 220 : 130 }}
                     >
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
+                        <BarChart
                           data={chartData}
                           margin={{
                             top: 8,
                             right: 24,
                             left: 8,
-                            bottom: isLast ? 65 : 4,
+                            bottom: isLast ? 80 : 4,
                           }}
+                          barCategoryGap="25%"
                         >
                           <CartesianGrid
                             strokeDasharray="3 3"
@@ -311,7 +332,7 @@ export default function ChannelAnalysis() {
                             tickLine={false}
                             axisLine={{ stroke: "#cbd5e1" }}
                             tick={isLast ? <ThumbnailXTick /> : false}
-                            height={isLast ? 65 : 8}
+                            height={isLast ? 80 : 8}
                           />
                           <YAxis
                             tickFormatter={(v: number) => compactFmt.format(v)}
@@ -321,7 +342,7 @@ export default function ChannelAnalysis() {
                             width={56}
                           />
                           <Tooltip
-                            cursor={{ stroke: "#94a3b8", strokeDasharray: "3 3" }}
+                            cursor={{ fill: "rgba(30, 58, 138, 0.05)" }}
                             labelFormatter={(label) => {
                               const id =
                                 typeof label === "string" ? label : String(label);
@@ -340,16 +361,13 @@ export default function ChannelAnalysis() {
                             }}
                             labelStyle={{ fontWeight: 700, color: "#0f172a" }}
                           />
-                          <Line
-                            type="monotone"
+                          <Bar
                             dataKey={s.key}
-                            stroke={s.color}
-                            strokeWidth={2.5}
-                            dot={{ r: 4, fill: s.color, strokeWidth: 0 }}
-                            activeDot={{ r: 6 }}
-                            isAnimationActive
+                            fill={s.color}
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={60}
                           />
-                        </LineChart>
+                        </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
