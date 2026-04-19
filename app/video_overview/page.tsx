@@ -122,18 +122,32 @@ function VideoOverviewContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ video: data.video, channel: data.channel }),
       });
-      const predJson = (await pr.json()) as
-        | PipelineResult
-        | { error: string; detail?: string; hint?: string };
-      if (!pr.ok || "error" in predJson) {
-        const pe = predJson as { error: string; detail?: string; hint?: string };
-        let msg = pe.error || "Model prediction failed.";
-        if (pe.detail) msg += ` — ${String(pe.detail).slice(0, 500)}`;
-        if (pe.hint) msg += ` (${String(pe.hint).slice(0, 400)})`;
-        setPredictNote(msg);
+      const rawBody = await pr.text();
+      let predJson: PipelineResult | { error: string; detail?: string; hint?: string } | null =
+        null;
+      try {
+        predJson = JSON.parse(rawBody) as PipelineResult | {
+          error: string;
+          detail?: string;
+          hint?: string;
+        };
+      } catch {
+        setPredictNote(
+          `Prediction response was not JSON (HTTP ${pr.status}). ${rawBody.slice(0, 280)}`
+        );
         setPipeline(null);
-      } else {
-        setPipeline(predJson);
+      }
+      if (predJson) {
+        if (!pr.ok || "error" in predJson) {
+          const pe = predJson as { error: string; detail?: string; hint?: string };
+          let msg = pe.error || "Model prediction failed.";
+          if (pe.detail) msg += ` — ${String(pe.detail).slice(0, 500)}`;
+          if (pe.hint) msg += ` (${String(pe.hint).slice(0, 400)})`;
+          setPredictNote(msg);
+          setPipeline(null);
+        } else {
+          setPipeline(predJson as PipelineResult);
+        }
       }
 
       if (typeof window !== "undefined") {
