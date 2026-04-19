@@ -2,9 +2,71 @@
 
 import React, { useState } from "react";
 
+type VideoInfo = {
+  id: string;
+  title: string;
+  publishedAt: string;
+  categoryId: string;
+  categoryName: string;
+  viewCount: number;
+  channelId: string;
+  channelTitle: string;
+};
+
+type ChannelInfo = {
+  id: string;
+  title: string;
+  country: string | null;
+  subscriberCount: number;
+  viewCount: number;
+  videoCount: number;
+};
+
+const numberFmt = new Intl.NumberFormat("en-US");
+const dateFmt = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
+const STORAGE_KEY = "yourisk:lastScan";
+
 export default function VideoOverview() {
   const [url, setUrl] = useState("");
-  const [hasData, setHasData] = useState(false);
+  const [video, setVideo] = useState<VideoInfo | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const hasData = !!video;
+
+  async function handleScan() {
+    if (!url.trim() || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/youtube?url=${encodeURIComponent(url)}`);
+      const data = (await res.json()) as
+        | { video: VideoInfo; channel: ChannelInfo | null }
+        | { error: string };
+      if (!res.ok || "error" in data) {
+        const message = "error" in data ? data.error : "Failed to fetch video.";
+        throw new Error(message);
+      }
+      setVideo(data.video);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ video: data.video, channel: data.channel, ts: Date.now() })
+        );
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Unexpected error.";
+      setError(message);
+      setVideo(null);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <>
@@ -284,14 +346,36 @@ export default function VideoOverview() {
             placeholder="Paste YouTube video URL…"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && setHasData(true)}
+            onKeyDown={(e) => e.key === "Enter" && handleScan()}
+            disabled={loading}
           />
-          <button className="vo-btn" onClick={() => setHasData(true)}>
-            Scan Asset →
+          <button
+            className="vo-btn"
+            onClick={handleScan}
+            disabled={loading || !url.trim()}
+            style={loading || !url.trim() ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+          >
+            {loading ? "Scanning…" : "Scan Asset →"}
           </button>
         </div>
 
-        {hasData && (
+        {error && (
+          <div
+            style={{
+              padding: "12px 16px",
+              borderRadius: 10,
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              color: "#b91c1c",
+              fontSize: 13,
+              marginBottom: 20,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {hasData && video && (
           <>
             <div className="vo-divider" />
 
@@ -299,15 +383,17 @@ export default function VideoOverview() {
             <div className="vo-stats vo-reveal vo-reveal-1">
               <div className="vo-stat">
                 <div className="vo-label">Current Views</div>
-                <div className="vo-stat-value">4,500,000</div>
+                <div className="vo-stat-value">{numberFmt.format(video.viewCount)}</div>
               </div>
               <div className="vo-stat">
                 <div className="vo-label">Publish Date</div>
-                <div className="vo-stat-value">Apr 18, 2026</div>
+                <div className="vo-stat-value">
+                  {dateFmt.format(new Date(video.publishedAt))}
+                </div>
               </div>
               <div className="vo-stat">
                 <div className="vo-label">Primary Category</div>
-                <div className="vo-stat-value">Science & Tech</div>
+                <div className="vo-stat-value">{video.categoryName}</div>
               </div>
             </div>
 

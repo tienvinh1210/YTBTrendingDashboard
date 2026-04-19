@@ -1,8 +1,70 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+
+type ChannelInfo = {
+  id: string;
+  title: string;
+  country: string | null;
+  subscriberCount: number;
+  viewCount: number;
+  videoCount: number;
+};
+
+type StoredScan = {
+  video: { channelTitle: string };
+  channel: ChannelInfo | null;
+};
+
+const STORAGE_KEY = "yourisk:lastScan";
+const numberFmt = new Intl.NumberFormat("en-US");
+
+let regionNames: Intl.DisplayNames | null = null;
+function getCountryName(code: string | null): string {
+  if (!code) return "Unknown";
+  if (typeof Intl !== "undefined" && "DisplayNames" in Intl) {
+    if (!regionNames) {
+      try {
+        regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+      } catch {
+        regionNames = null;
+      }
+    }
+    if (regionNames) {
+      try {
+        return regionNames.of(code) ?? code;
+      } catch {
+        return code;
+      }
+    }
+  }
+  return code;
+}
 
 export default function ChannelAnalysis() {
+  const [channel, setChannel] = useState<ChannelInfo | null>(null);
+  const [channelTitle, setChannelTitle] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as StoredScan;
+        setChannel(parsed.channel ?? null);
+        setChannelTitle(parsed.video?.channelTitle ?? null);
+      }
+    } catch {
+      // ignore corrupted storage
+    } finally {
+      setLoaded(true);
+    }
+  }, []);
+
+  const countryCode = channel?.country ?? null;
+  const countryDisplay = getCountryName(countryCode);
+
   const getHeatmapColor = (val: number) => {
     if (val >= 80) return 'bg-blue-600 text-white shadow-sm';
     if (val >= 60) return 'bg-blue-400 text-white shadow-sm';
@@ -25,25 +87,39 @@ export default function ChannelAnalysis() {
       {/* Header - Base Fade In */}
       <div className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both">
         <h1 className="text-3xl font-black tracking-tight text-slate-900">Channel Analysis</h1>
-        <p className="text-sm font-medium mt-2 text-slate-600">High-level channel integrity and global viral footprint.</p>
+        <p className="text-sm font-medium mt-2 text-slate-600">
+          {channelTitle
+            ? `High-level integrity and global viral footprint for ${channelTitle}.`
+            : "High-level channel integrity and global viral footprint."}
+        </p>
       </div>
+
+      {loaded && !channel && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm font-medium text-amber-800 animate-in fade-in duration-500">
+          Scan a video on the Video Overview page first to populate channel data here.
+        </div>
+      )}
 
       {/* Top Stats Grid - Delay 150ms */}
       <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
         <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Channel Origin</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-2xl font-black text-slate-900">US</div>
-            <div className="text-sm font-bold text-slate-400">United States</div>
+            <div className="text-2xl font-black text-slate-900">{countryCode ?? "—"}</div>
+            <div className="text-sm font-bold text-slate-400">{countryDisplay}</div>
           </div>
         </div>
         <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Total Subscribers</div>
-          <div className="text-2xl font-black text-slate-900">18,400,000</div>
+          <div className="text-2xl font-black text-slate-900">
+            {channel ? numberFmt.format(channel.subscriberCount) : "—"}
+          </div>
         </div>
         <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Total Views</div>
-          <div className="text-2xl font-black text-slate-900">4,200,000,000</div>
+          <div className="text-2xl font-black text-slate-900">
+            {channel ? numberFmt.format(channel.viewCount) : "—"}
+          </div>
         </div>
       </div>
 
