@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type RecommendedVideo = {
   videoId: string;
@@ -25,12 +25,28 @@ type StoredScan = {
 
 const STORAGE_KEY = "yourisk:lastScan";
 
+type TrainingInsights = {
+  globalCategoryMix: { categoryId: number; categoryName: string; count: number; share: number }[];
+  categoryTrendingAcrossCountries: {
+    categoryId: number;
+    categoryName: string;
+    countriesWithTop3Presence: number;
+  }[];
+  topCategoriesByCountry: {
+    country: string;
+    trendingVideos: number;
+    topCategories: { categoryId: number; categoryName: string; count: number; share: number }[];
+  }[];
+};
+
 export default function PortfolioRecommendation() {
   const [scan, setScan] = useState<StoredScan | null>(null);
   const [recommendations, setRecommendations] = useState<RecommendedVideo[]>([]);
   const [recsLoading, setRecsLoading] = useState(false);
   const [recsError, setRecsError] = useState<string | null>(null);
   const [scanLoaded, setScanLoaded] = useState(false);
+  const [trainingInsights, setTrainingInsights] = useState<TrainingInsights | null>(null);
+  const [trainingInsightsError, setTrainingInsightsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -42,6 +58,29 @@ export default function PortfolioRecommendation() {
     } finally {
       setScanLoaded(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/portfolio/training-insights", { signal: controller.signal })
+      .then(async (res) => {
+        const data = (await res.json()) as TrainingInsights | { error: string };
+        if (!res.ok || "error" in data) {
+          throw new Error("error" in data ? data.error : "Failed to load training insights.");
+        }
+        const slim: TrainingInsights = {
+          globalCategoryMix: data.globalCategoryMix,
+          categoryTrendingAcrossCountries: data.categoryTrendingAcrossCountries,
+          topCategoriesByCountry: data.topCategoriesByCountry,
+        };
+        setTrainingInsights(slim);
+        setTrainingInsightsError(null);
+      })
+      .catch((e: unknown) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setTrainingInsightsError(e instanceof Error ? e.message : "Unexpected error.");
+      });
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -86,29 +125,16 @@ export default function PortfolioRecommendation() {
     return () => controller.abort();
   }, [scan]);
 
-  const categoryAllocations = [
-    { label: 'Tech Reviews', percentage: 40, color: 'bg-blue-900' },
-    { label: 'How-to / Tutorials', percentage: 30, color: 'bg-blue-600' },
-    { label: 'Entertainment', percentage: 20, color: 'bg-indigo-400' },
-    { label: 'Gaming', percentage: 10, color: 'bg-slate-400' },
-  ];
-
-  const creators = [
-    { name: 'MKBHD', category: 'Tech Reviews', countryCode: 'us', country: 'US', risk: 'Low', ltv: '$2.4M', allocation: '25%' },
-    { name: 'Dave2D', category: 'Tech Reviews', countryCode: 'us', country: 'US', risk: 'Low', ltv: '$1.8M', allocation: '15%' },
-    { name: 'Linus Tech', category: 'How-to', countryCode: 'ca', country: 'CA', risk: 'Medium', ltv: '$2.1M', allocation: '20%' },
-    { name: 'iJustine', category: 'Entertainment', countryCode: 'us', country: 'US', risk: 'Low', ltv: '$1.2M', allocation: '15%' },
-    { name: 'MrMobile', category: 'Tech Reviews', countryCode: 'gb', country: 'GB', risk: 'Medium', ltv: '$0.9M', allocation: '10%' },
-    { name: 'GadgetsBoy', category: 'How-to', countryCode: 'gb', country: 'GB', risk: 'Medium', ltv: '$0.8M', allocation: '10%' },
-  ];
-
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
 
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-black tracking-tight text-slate-900">Industry Portfolio Recommendation</h1>
-        <p className="text-sm font-medium mt-2 text-slate-600">Configure and analyze creator mix diversification.</p>
+        <p className="text-sm font-medium mt-2 text-slate-600">
+          Similar videos use the live chart; training panels summarize{" "}
+          <code className="text-xs bg-slate-100 px-1 rounded">stage1_training_data.csv</code>.
+        </p>
       </div>
 
       {/* Top 5 Similar Videos */}
@@ -165,115 +191,85 @@ export default function PortfolioRecommendation() {
         )}
       </div>
 
-      {/* 2-Column Section */}
-      <div className="grid grid-cols-2 gap-6">
-        {/* Category Allocation */}
-        <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6">
-          <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-6">Category Allocation</div>
-          <div className="space-y-5">
-            {categoryAllocations.map((item, i) => (
-              <div key={i}>
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-sm font-bold text-slate-900">{item.label}</span>
-                  <span className="text-xs font-bold text-slate-500">{item.percentage}%</span>
-                </div>
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
-                  <div className={`${item.color} h-full rounded-full`} style={{ width: `${item.percentage}%` }}></div>
-                </div>
-              </div>
-            ))}
+      {/* Training-backed category context (kept sections only) */}
+      <div className="bg-white/70 backdrop-blur-md border border-slate-300 shadow-sm rounded-2xl p-6 space-y-6">
+        {trainingInsightsError && (
+          <div className="text-sm font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            {trainingInsightsError}
           </div>
-        </div>
+        )}
 
-        {/* Diversification Score */}
-        <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6">
-          <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-5">Diversification Score</div>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-blue-50/50 rounded-xl p-4 flex flex-col items-center justify-center border border-blue-100">
-              <div className="text-4xl font-black text-blue-900 mb-1">84</div>
-              <div className="text-xs font-bold tracking-wide text-blue-700 uppercase">Overall score</div>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-4 flex flex-col items-center justify-center border border-slate-200">
-              <div className="text-4xl font-black text-slate-800 mb-1">6</div>
-              <div className="text-xs font-bold tracking-wide text-slate-500 uppercase">Creators in mix</div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
+        {trainingInsights && (
+          <>
             <div>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-sm font-bold text-slate-900">Category spread</span>
-                <span className="text-xs font-bold text-blue-700">4 categories</span>
+              <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-3">
+                Dominant global categories (share of trending training rows)
               </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
-                <div className="bg-gradient-to-r from-blue-900 to-blue-700 h-full w-[85%] rounded-full"></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-sm font-bold text-slate-900">Country spread</span>
-                <span className="text-xs font-bold text-blue-700">3 markets</span>
-              </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
-                <div className="bg-gradient-to-r from-blue-900 to-blue-700 h-full w-[75%] rounded-full"></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-sm font-bold text-slate-900">Risk tier spread</span>
-                <span className="text-xs font-bold text-slate-500">Mixed</span>
-              </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
-                <div className="bg-slate-400 h-full w-[60%] rounded-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recommended Creator Mix */}
-      <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6 overflow-hidden">
-        <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-5">Recommended Creator Mix</div>
-        <div className="w-full overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="text-slate-500 border-b-2 border-slate-100">
-                <th className="pb-3 font-bold w-1/4">Creator</th>
-                <th className="pb-3 font-bold w-1/5">Category</th>
-                <th className="pb-3 font-bold w-1/6">Market</th>
-                <th className="pb-3 font-bold w-1/6">Risk</th>
-                <th className="pb-3 font-bold w-1/6">LTV Est.</th>
-                <th className="pb-3 font-bold text-right w-[10%]">Allocation</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {creators.map((creator, i) => (
-                <tr key={i} className="text-slate-700 transition-colors hover:bg-slate-50/50">
-                  <td className="py-4 font-black text-slate-900">{creator.name}</td>
-                  <td className="py-4 font-medium">{creator.category}</td>
-                  <td className="py-4 flex items-center gap-2">
-                    <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200 text-[10px] font-black uppercase tracking-wider">
-                      {creator.countryCode}
+              <ul className="space-y-2 text-sm text-slate-700">
+                {trainingInsights.globalCategoryMix.slice(0, 5).map((row) => (
+                  <li key={row.categoryId} className="flex items-center gap-3">
+                    <span className="w-44 font-bold text-slate-900 shrink-0">{row.categoryName}</span>
+                    <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-800 rounded-full" style={{ width: `${row.share * 100}%` }} />
+                    </div>
+                    <span className="text-xs font-bold text-slate-500 w-14 text-right">
+                      {(row.share * 100).toFixed(1)}%
                     </span>
-                    <span className="font-bold">{creator.country}</span>
-                  </td>
-                  <td className="py-4">
-                    <span className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                      creator.risk === 'Low'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
-                    }`}>
-                      {creator.risk}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-blue-50/60 p-4">
+              <div className="text-xs font-bold text-blue-900 uppercase mb-2">Cross-market signal</div>
+              {trainingInsights.categoryTrendingAcrossCountries.length > 0 ? (
+                <p className="text-sm font-medium text-slate-800 leading-relaxed">
+                  <span className="font-black">{trainingInsights.categoryTrendingAcrossCountries[0].categoryName}</span>{" "}
+                  appears in the top-three category mix in{" "}
+                  <span className="font-black">
+                    {trainingInsights.categoryTrendingAcrossCountries[0].countriesWithTop3Presence}
+                  </span>{" "}
+                  country buckets
+                  {trainingInsights.categoryTrendingAcrossCountries[1] ? (
+                    <>
+                      , followed by{" "}
+                      <span className="font-black">
+                        {trainingInsights.categoryTrendingAcrossCountries[1].categoryName}
+                      </span>{" "}
+                      ({trainingInsights.categoryTrendingAcrossCountries[1].countriesWithTop3Presence})
+                    </>
+                  ) : null}
+                  . Overweight these if you want exposure aligned with charts that show up across many markets.
+                </p>
+              ) : (
+                <p className="text-sm text-slate-600">Not enough regional coverage to rank cross-market categories.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-3">
+                Per-country top category (first slot only, where country is known)
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {trainingInsights.topCategoriesByCountry.slice(0, 16).map((block) => {
+                  const top = block.topCategories[0];
+                  if (!top) return null;
+                  return (
+                    <span
+                      key={block.country}
+                      className="inline-flex items-center gap-2 text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700"
+                    >
+                      <span className="font-black text-slate-900">{block.country}</span>
+                      <span className="text-slate-400">→</span>
+                      <span>{top.categoryName}</span>
+                      <span className="text-slate-400">({(top.share * 100).toFixed(0)}%)</span>
                     </span>
-                  </td>
-                  <td className="py-4 font-bold text-slate-500">{creator.ltv}</td>
-                  <td className="py-4 text-right font-black text-slate-900">{creator.allocation}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
     </div>

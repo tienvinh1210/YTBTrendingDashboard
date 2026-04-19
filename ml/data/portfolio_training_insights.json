@@ -1,0 +1,2745 @@
+{
+  "sourceCsv": "C:/Users/DELL/Desktop/Data_hack/YTBTrendingDashboard/ml/data/stage1_training_data.csv",
+  "sourceCache": "C:/Users/DELL/Desktop/Data_hack/data_enriched/channels_cache.json",
+  "trendyRowCount": 19299,
+  "channelsWithCountry": 3744,
+  "summary": "Trending rows are stage1 training samples with trendy=1. Channel country comes from channels_cache snippet.country. Similar channels use TF-IDF cosine similarity on normalized titles within the same category.",
+  "globalCategoryMix": [
+    {
+      "categoryId": 22,
+      "categoryName": "People & Blogs",
+      "count": 6049,
+      "share": 0.3134
+    },
+    {
+      "categoryId": 24,
+      "categoryName": "Entertainment",
+      "count": 3446,
+      "share": 0.1786
+    },
+    {
+      "categoryId": 20,
+      "categoryName": "Gaming",
+      "count": 2344,
+      "share": 0.1215
+    },
+    {
+      "categoryId": 25,
+      "categoryName": "News & Politics",
+      "count": 1199,
+      "share": 0.0621
+    },
+    {
+      "categoryId": 17,
+      "categoryName": "Sports",
+      "count": 1119,
+      "share": 0.058
+    },
+    {
+      "categoryId": 10,
+      "categoryName": "Music",
+      "count": 1035,
+      "share": 0.0536
+    },
+    {
+      "categoryId": 23,
+      "categoryName": "Comedy",
+      "count": 753,
+      "share": 0.039
+    },
+    {
+      "categoryId": 28,
+      "categoryName": "Science & Technology",
+      "count": 720,
+      "share": 0.0373
+    },
+    {
+      "categoryId": 1,
+      "categoryName": "Film & Animation",
+      "count": 662,
+      "share": 0.0343
+    },
+    {
+      "categoryId": 2,
+      "categoryName": "Autos & Vehicles",
+      "count": 656,
+      "share": 0.034
+    },
+    {
+      "categoryId": 26,
+      "categoryName": "Howto & Style",
+      "count": 404,
+      "share": 0.0209
+    },
+    {
+      "categoryId": 27,
+      "categoryName": "Education",
+      "count": 398,
+      "share": 0.0206
+    },
+    {
+      "categoryId": 15,
+      "categoryName": "Pets & Animals",
+      "count": 346,
+      "share": 0.0179
+    },
+    {
+      "categoryId": 19,
+      "categoryName": "Travel & Events",
+      "count": 151,
+      "share": 0.0078
+    },
+    {
+      "categoryId": 29,
+      "categoryName": "Nonprofits & Activism",
+      "count": 15,
+      "share": 0.0008
+    }
+  ],
+  "categoryTrendingAcrossCountries": [
+    {
+      "categoryId": 24,
+      "categoryName": "Entertainment",
+      "countriesWithTop3Presence": 37
+    },
+    {
+      "categoryId": 22,
+      "categoryName": "People & Blogs",
+      "countriesWithTop3Presence": 33
+    },
+    {
+      "categoryId": 20,
+      "categoryName": "Gaming",
+      "countriesWithTop3Presence": 27
+    },
+    {
+      "categoryId": 25,
+      "categoryName": "News & Politics",
+      "countriesWithTop3Presence": 26
+    },
+    {
+      "categoryId": 23,
+      "categoryName": "Comedy",
+      "countriesWithTop3Presence": 11
+    },
+    {
+      "categoryId": 17,
+      "categoryName": "Sports",
+      "countriesWithTop3Presence": 6
+    },
+    {
+      "categoryId": 28,
+      "categoryName": "Science & Technology",
+      "countriesWithTop3Presence": 5
+    },
+    {
+      "categoryId": 2,
+      "categoryName": "Autos & Vehicles",
+      "countriesWithTop3Presence": 5
+    },
+    {
+      "categoryId": 10,
+      "categoryName": "Music",
+      "countriesWithTop3Presence": 5
+    },
+    {
+      "categoryId": 1,
+      "categoryName": "Film & Animation",
+      "countriesWithTop3Presence": 4
+    },
+    {
+      "categoryId": 15,
+      "categoryName": "Pets & Animals",
+      "countriesWithTop3Presence": 3
+    },
+    {
+      "categoryId": 26,
+      "categoryName": "Howto & Style",
+      "countriesWithTop3Presence": 2
+    }
+  ],
+  "topCategoriesByCountry": [
+    {
+      "country": "US",
+      "trendingVideos": 1062,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 227,
+          "share": 0.2137
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 171,
+          "share": 0.161
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 157,
+          "share": 0.1478
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 139,
+          "share": 0.1309
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 111,
+          "share": 0.1045
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 48,
+          "share": 0.0452
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 43,
+          "share": 0.0405
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 34,
+          "share": 0.032
+        }
+      ]
+    },
+    {
+      "country": "KR",
+      "trendingVideos": 577,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 123,
+          "share": 0.2132
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 111,
+          "share": 0.1924
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 79,
+          "share": 0.1369
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 52,
+          "share": 0.0901
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 47,
+          "share": 0.0815
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 41,
+          "share": 0.0711
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 31,
+          "share": 0.0537
+        },
+        {
+          "categoryId": 15,
+          "categoryName": "Pets & Animals",
+          "count": 27,
+          "share": 0.0468
+        }
+      ]
+    },
+    {
+      "country": "IN",
+      "trendingVideos": 573,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 172,
+          "share": 0.3002
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 106,
+          "share": 0.185
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 82,
+          "share": 0.1431
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 58,
+          "share": 0.1012
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 36,
+          "share": 0.0628
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 32,
+          "share": 0.0558
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 29,
+          "share": 0.0506
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 20,
+          "share": 0.0349
+        }
+      ]
+    },
+    {
+      "country": "JP",
+      "trendingVideos": 572,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 123,
+          "share": 0.215
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 116,
+          "share": 0.2028
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 84,
+          "share": 0.1469
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 69,
+          "share": 0.1206
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 37,
+          "share": 0.0647
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 36,
+          "share": 0.0629
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 36,
+          "share": 0.0629
+        },
+        {
+          "categoryId": 15,
+          "categoryName": "Pets & Animals",
+          "count": 24,
+          "share": 0.042
+        }
+      ]
+    },
+    {
+      "country": "FR",
+      "trendingVideos": 452,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 108,
+          "share": 0.2389
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 103,
+          "share": 0.2279
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 54,
+          "share": 0.1195
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 52,
+          "share": 0.115
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 36,
+          "share": 0.0796
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 26,
+          "share": 0.0575
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 18,
+          "share": 0.0398
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 15,
+          "share": 0.0332
+        }
+      ]
+    },
+    {
+      "country": "BR",
+      "trendingVideos": 416,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 106,
+          "share": 0.2548
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 92,
+          "share": 0.2212
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 62,
+          "share": 0.149
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 46,
+          "share": 0.1106
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 40,
+          "share": 0.0962
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 17,
+          "share": 0.0409
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 14,
+          "share": 0.0337
+        },
+        {
+          "categoryId": 27,
+          "categoryName": "Education",
+          "count": 12,
+          "share": 0.0288
+        }
+      ]
+    },
+    {
+      "country": "DE",
+      "trendingVideos": 375,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 76,
+          "share": 0.2027
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 68,
+          "share": 0.1813
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 67,
+          "share": 0.1787
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 32,
+          "share": 0.0853
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 27,
+          "share": 0.072
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 26,
+          "share": 0.0693
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 22,
+          "share": 0.0587
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 21,
+          "share": 0.056
+        }
+      ]
+    },
+    {
+      "country": "GB",
+      "trendingVideos": 243,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 48,
+          "share": 0.1975
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 43,
+          "share": 0.177
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 34,
+          "share": 0.1399
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 33,
+          "share": 0.1358
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 22,
+          "share": 0.0905
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 22,
+          "share": 0.0905
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 17,
+          "share": 0.07
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 10,
+          "share": 0.0412
+        }
+      ]
+    },
+    {
+      "country": "RU",
+      "trendingVideos": 203,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 53,
+          "share": 0.2611
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 39,
+          "share": 0.1921
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 36,
+          "share": 0.1773
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 23,
+          "share": 0.1133
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 17,
+          "share": 0.0837
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 12,
+          "share": 0.0591
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 9,
+          "share": 0.0443
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 5,
+          "share": 0.0246
+        }
+      ]
+    },
+    {
+      "country": "MX",
+      "trendingVideos": 197,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 54,
+          "share": 0.2741
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 47,
+          "share": 0.2386
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 30,
+          "share": 0.1523
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 26,
+          "share": 0.132
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 13,
+          "share": 0.066
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 10,
+          "share": 0.0508
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 6,
+          "share": 0.0305
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 4,
+          "share": 0.0203
+        }
+      ]
+    },
+    {
+      "country": "ES",
+      "trendingVideos": 120,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 37,
+          "share": 0.3083
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 29,
+          "share": 0.2417
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 23,
+          "share": 0.1917
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 8,
+          "share": 0.0667
+        },
+        {
+          "categoryId": 27,
+          "categoryName": "Education",
+          "count": 7,
+          "share": 0.0583
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 7,
+          "share": 0.0583
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 3,
+          "share": 0.025
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 3,
+          "share": 0.025
+        }
+      ]
+    },
+    {
+      "country": "CA",
+      "trendingVideos": 100,
+      "topCategories": [
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 26,
+          "share": 0.26
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 22,
+          "share": 0.22
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 14,
+          "share": 0.14
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 14,
+          "share": 0.14
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 13,
+          "share": 0.13
+        },
+        {
+          "categoryId": 26,
+          "categoryName": "Howto & Style",
+          "count": 5,
+          "share": 0.05
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 3,
+          "share": 0.03
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 2,
+          "share": 0.02
+        }
+      ]
+    },
+    {
+      "country": "KZ",
+      "trendingVideos": 62,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 29,
+          "share": 0.4677
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 10,
+          "share": 0.1613
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 4,
+          "share": 0.0645
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 4,
+          "share": 0.0645
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 4,
+          "share": 0.0645
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 3,
+          "share": 0.0484
+        },
+        {
+          "categoryId": 15,
+          "categoryName": "Pets & Animals",
+          "count": 2,
+          "share": 0.0323
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 1,
+          "share": 0.0161
+        }
+      ]
+    },
+    {
+      "country": "UA",
+      "trendingVideos": 60,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 33,
+          "share": 0.55
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 10,
+          "share": 0.1667
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 5,
+          "share": 0.0833
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 4,
+          "share": 0.0667
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 3,
+          "share": 0.05
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 2,
+          "share": 0.0333
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 2,
+          "share": 0.0333
+        },
+        {
+          "categoryId": 29,
+          "categoryName": "Nonprofits & Activism",
+          "count": 1,
+          "share": 0.0167
+        }
+      ]
+    },
+    {
+      "country": "AU",
+      "trendingVideos": 47,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 17,
+          "share": 0.3617
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 8,
+          "share": 0.1702
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 8,
+          "share": 0.1702
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 6,
+          "share": 0.1277
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 3,
+          "share": 0.0638
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 3,
+          "share": 0.0638
+        },
+        {
+          "categoryId": 26,
+          "categoryName": "Howto & Style",
+          "count": 2,
+          "share": 0.0426
+        }
+      ]
+    },
+    {
+      "country": "CO",
+      "trendingVideos": 38,
+      "topCategories": [
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 15,
+          "share": 0.3947
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 11,
+          "share": 0.2895
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 4,
+          "share": 0.1053
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 4,
+          "share": 0.1053
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 2,
+          "share": 0.0526
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 1,
+          "share": 0.0263
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 1,
+          "share": 0.0263
+        }
+      ]
+    },
+    {
+      "country": "TR",
+      "trendingVideos": 31,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 11,
+          "share": 0.3548
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 9,
+          "share": 0.2903
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 6,
+          "share": 0.1935
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 2,
+          "share": 0.0645
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 1,
+          "share": 0.0323
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 1,
+          "share": 0.0323
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.0323
+        }
+      ]
+    },
+    {
+      "country": "AR",
+      "trendingVideos": 25,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 8,
+          "share": 0.32
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 6,
+          "share": 0.24
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 4,
+          "share": 0.16
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 2,
+          "share": 0.08
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 2,
+          "share": 0.08
+        },
+        {
+          "categoryId": 15,
+          "categoryName": "Pets & Animals",
+          "count": 1,
+          "share": 0.04
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 1,
+          "share": 0.04
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 1,
+          "share": 0.04
+        }
+      ]
+    },
+    {
+      "country": "AT",
+      "trendingVideos": 20,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 6,
+          "share": 0.3
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 5,
+          "share": 0.25
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "categoryId": 26,
+          "categoryName": "Howto & Style",
+          "count": 1,
+          "share": 0.05
+        }
+      ]
+    },
+    {
+      "country": "CH",
+      "trendingVideos": 19,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 4,
+          "share": 0.2105
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 3,
+          "share": 0.1579
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 3,
+          "share": 0.1579
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 3,
+          "share": 0.1579
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 2,
+          "share": 0.1053
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.0526
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 1,
+          "share": 0.0526
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 1,
+          "share": 0.0526
+        }
+      ]
+    },
+    {
+      "country": "GE",
+      "trendingVideos": 18,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 9,
+          "share": 0.5
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 5,
+          "share": 0.2778
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 2,
+          "share": 0.1111
+        },
+        {
+          "categoryId": 15,
+          "categoryName": "Pets & Animals",
+          "count": 1,
+          "share": 0.0556
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.0556
+        }
+      ]
+    },
+    {
+      "country": "BE",
+      "trendingVideos": 17,
+      "topCategories": [
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 8,
+          "share": 0.4706
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 4,
+          "share": 0.2353
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 2,
+          "share": 0.1176
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 1,
+          "share": 0.0588
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 1,
+          "share": 0.0588
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.0588
+        }
+      ]
+    },
+    {
+      "country": "PE",
+      "trendingVideos": 16,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 10,
+          "share": 0.625
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 3,
+          "share": 0.1875
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 2,
+          "share": 0.125
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 1,
+          "share": 0.0625
+        }
+      ]
+    },
+    {
+      "country": "NL",
+      "trendingVideos": 15,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 6,
+          "share": 0.4
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 4,
+          "share": 0.2667
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 2,
+          "share": 0.1333
+        },
+        {
+          "categoryId": 27,
+          "categoryName": "Education",
+          "count": 2,
+          "share": 0.1333
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 0.0667
+        }
+      ]
+    },
+    {
+      "country": "PL",
+      "trendingVideos": 15,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 7,
+          "share": 0.4667
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 4,
+          "share": 0.2667
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 2,
+          "share": 0.1333
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 1,
+          "share": 0.0667
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 1,
+          "share": 0.0667
+        }
+      ]
+    },
+    {
+      "country": "AE",
+      "trendingVideos": 14,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 4,
+          "share": 0.2857
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 3,
+          "share": 0.2143
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 3,
+          "share": 0.2143
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 3,
+          "share": 0.2143
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 1,
+          "share": 0.0714
+        }
+      ]
+    },
+    {
+      "country": "BY",
+      "trendingVideos": 13,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 6,
+          "share": 0.4615
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 3,
+          "share": 0.2308
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 2,
+          "share": 0.1538
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 1,
+          "share": 0.0769
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 1,
+          "share": 0.0769
+        }
+      ]
+    },
+    {
+      "country": "IT",
+      "trendingVideos": 12,
+      "topCategories": [
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 6,
+          "share": 0.5
+        },
+        {
+          "categoryId": 19,
+          "categoryName": "Travel & Events",
+          "count": 3,
+          "share": 0.25
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 3,
+          "share": 0.25
+        }
+      ]
+    },
+    {
+      "country": "MA",
+      "trendingVideos": 11,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 3,
+          "share": 0.2727
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 2,
+          "share": 0.1818
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 1,
+          "share": 0.0909
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 1,
+          "share": 0.0909
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.0909
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 1,
+          "share": 0.0909
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 1,
+          "share": 0.0909
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 1,
+          "share": 0.0909
+        }
+      ]
+    },
+    {
+      "country": "PK",
+      "trendingVideos": 11,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 4,
+          "share": 0.3636
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 4,
+          "share": 0.3636
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 3,
+          "share": 0.2727
+        }
+      ]
+    },
+    {
+      "country": "FI",
+      "trendingVideos": 10,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 9,
+          "share": 0.9
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 0.1
+        }
+      ]
+    },
+    {
+      "country": "JO",
+      "trendingVideos": 8,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 4,
+          "share": 0.5
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 4,
+          "share": 0.5
+        }
+      ]
+    },
+    {
+      "country": "BG",
+      "trendingVideos": 7,
+      "topCategories": [
+        {
+          "categoryId": 15,
+          "categoryName": "Pets & Animals",
+          "count": 6,
+          "share": 0.8571
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 0.1429
+        }
+      ]
+    },
+    {
+      "country": "CL",
+      "trendingVideos": 7,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 4,
+          "share": 0.5714
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 2,
+          "share": 0.2857
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 1,
+          "share": 0.1429
+        }
+      ]
+    },
+    {
+      "country": "IE",
+      "trendingVideos": 7,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 3,
+          "share": 0.4286
+        },
+        {
+          "categoryId": 26,
+          "categoryName": "Howto & Style",
+          "count": 3,
+          "share": 0.4286
+        },
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 1,
+          "share": 0.1429
+        }
+      ]
+    },
+    {
+      "country": "ID",
+      "trendingVideos": 6,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 4,
+          "share": 0.6667
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 1,
+          "share": 0.1667
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.1667
+        }
+      ]
+    },
+    {
+      "country": "PT",
+      "trendingVideos": 6,
+      "topCategories": [
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 4,
+          "share": 0.6667
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 0.1667
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 1,
+          "share": 0.1667
+        }
+      ]
+    },
+    {
+      "country": "QA",
+      "trendingVideos": 6,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 6,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "SE",
+      "trendingVideos": 6,
+      "topCategories": [
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 3,
+          "share": 0.5
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 2,
+          "share": 0.3333
+        },
+        {
+          "categoryId": 15,
+          "categoryName": "Pets & Animals",
+          "count": 1,
+          "share": 0.1667
+        }
+      ]
+    },
+    {
+      "country": "SV",
+      "trendingVideos": 6,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 4,
+          "share": 0.6667
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 1,
+          "share": 0.1667
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 1,
+          "share": 0.1667
+        }
+      ]
+    },
+    {
+      "country": "EC",
+      "trendingVideos": 5,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 1,
+          "share": 0.2
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 1,
+          "share": 0.2
+        },
+        {
+          "categoryId": 26,
+          "categoryName": "Howto & Style",
+          "count": 1,
+          "share": 0.2
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 0.2
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.2
+        }
+      ]
+    },
+    {
+      "country": "LT",
+      "trendingVideos": 5,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 4,
+          "share": 0.8
+        },
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 1,
+          "share": 0.2
+        }
+      ]
+    },
+    {
+      "country": "PH",
+      "trendingVideos": 5,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 4,
+          "share": 0.8
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 1,
+          "share": 0.2
+        }
+      ]
+    },
+    {
+      "country": "CY",
+      "trendingVideos": 4,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 3,
+          "share": 0.75
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.25
+        }
+      ]
+    },
+    {
+      "country": "CZ",
+      "trendingVideos": 4,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 3,
+          "share": 0.75
+        },
+        {
+          "categoryId": 29,
+          "categoryName": "Nonprofits & Activism",
+          "count": 1,
+          "share": 0.25
+        }
+      ]
+    },
+    {
+      "country": "GH",
+      "trendingVideos": 4,
+      "topCategories": [
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 4,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "LV",
+      "trendingVideos": 4,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 2,
+          "share": 0.5
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 2,
+          "share": 0.5
+        }
+      ]
+    },
+    {
+      "country": "SG",
+      "trendingVideos": 4,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 3,
+          "share": 0.75
+        },
+        {
+          "categoryId": 1,
+          "categoryName": "Film & Animation",
+          "count": 1,
+          "share": 0.25
+        }
+      ]
+    },
+    {
+      "country": "AZ",
+      "trendingVideos": 3,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 2,
+          "share": 0.6667
+        },
+        {
+          "categoryId": 15,
+          "categoryName": "Pets & Animals",
+          "count": 1,
+          "share": 0.3333
+        }
+      ]
+    },
+    {
+      "country": "GT",
+      "trendingVideos": 3,
+      "topCategories": [
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 2,
+          "share": 0.6667
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 1,
+          "share": 0.3333
+        }
+      ]
+    },
+    {
+      "country": "NO",
+      "trendingVideos": 3,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 3,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "RO",
+      "trendingVideos": 3,
+      "topCategories": [
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 2,
+          "share": 0.6667
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 1,
+          "share": 0.3333
+        }
+      ]
+    },
+    {
+      "country": "SK",
+      "trendingVideos": 3,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 3,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "SN",
+      "trendingVideos": 3,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 3,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "VE",
+      "trendingVideos": 3,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.3333
+        },
+        {
+          "categoryId": 17,
+          "categoryName": "Sports",
+          "count": 1,
+          "share": 0.3333
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 1,
+          "share": 0.3333
+        }
+      ]
+    },
+    {
+      "country": "ZA",
+      "trendingVideos": 3,
+      "topCategories": [
+        {
+          "categoryId": 2,
+          "categoryName": "Autos & Vehicles",
+          "count": 1,
+          "share": 0.3333
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "Music",
+          "count": 1,
+          "share": 0.3333
+        },
+        {
+          "categoryId": 23,
+          "categoryName": "Comedy",
+          "count": 1,
+          "share": 0.3333
+        }
+      ]
+    },
+    {
+      "country": "CR",
+      "trendingVideos": 2,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 0.5
+        },
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 0.5
+        }
+      ]
+    },
+    {
+      "country": "EE",
+      "trendingVideos": 2,
+      "topCategories": [
+        {
+          "categoryId": 29,
+          "categoryName": "Nonprofits & Activism",
+          "count": 1,
+          "share": 0.5
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 1,
+          "share": 0.5
+        }
+      ]
+    },
+    {
+      "country": "HN",
+      "trendingVideos": 2,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 2,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "IL",
+      "trendingVideos": 2,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 1,
+          "share": 0.5
+        },
+        {
+          "categoryId": 28,
+          "categoryName": "Science & Technology",
+          "count": 1,
+          "share": 0.5
+        }
+      ]
+    },
+    {
+      "country": "RS",
+      "trendingVideos": 2,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 2,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "TW",
+      "trendingVideos": 2,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 2,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "BO",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "DO",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "DZ",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "EG",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "LU",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 22,
+          "categoryName": "People & Blogs",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "MD",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "NP",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "SA",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "SI",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "TH",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 24,
+          "categoryName": "Entertainment",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "UG",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 20,
+          "categoryName": "Gaming",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    },
+    {
+      "country": "UY",
+      "trendingVideos": 1,
+      "topCategories": [
+        {
+          "categoryId": 25,
+          "categoryName": "News & Politics",
+          "count": 1,
+          "share": 1.0
+        }
+      ]
+    }
+  ],
+  "similarChannelsByCategory": [
+    {
+      "categoryId": 22,
+      "categoryName": "People & Blogs",
+      "pairs": [
+        {
+          "similarity": 1.0,
+          "channelA": "nguyen trinh",
+          "channelB": "\u0422\u0432\u043e\u0439 \u0411\u043e\u0433",
+          "channelIdA": "UCQuAWhYHRDRGsHPpktXyP3g",
+          "channelIdB": "UCjfDba6sD8wqBZLuA6W_rGA",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Jun-ho Lee",
+          "channelB": "Long V\u0169 Vlog",
+          "channelIdA": "UCBenFQSg07gmw16FmoRldZQ",
+          "channelIdB": "UCVkEXCllRM1mgRLrR8xIsWw",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 3,
+          "videosB": 3
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Jarif Arham",
+          "channelB": "Qp Sojib 8pro 100k",
+          "channelIdA": "UCDKQZmoH8huuAxKo5EIcpsw",
+          "channelIdB": "UCn9Fi_zHps8ZsxWZ5H_p_Rg",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 3,
+          "videosB": 3
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "\uc2a4\ud0c0\uc787",
+          "channelB": "\ubb34\ube44\ub294\ubb34\ube44\ub2e4",
+          "channelIdA": "UC-OGNXGTaNAcQ9LADmzKkOw",
+          "channelIdB": "UCf8T9se1injXAmZ7eCv8Gfw",
+          "countryA": null,
+          "countryB": "KR",
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "DZ Gamer",
+          "channelB": "\u0622\u0631\u0627\u0645 \u0627\u0644\u0625\u062e\u0628\u0627\u0631\u064a\u0629",
+          "channelIdA": "UC0Vxulmz_N5X6xXMYTRk_Tw",
+          "channelIdB": "UCAARW5D6RHTda0_ra7qC3IA",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "\uba38\uc2a4\ud06c\uc758 \ubaa8\ub4e0 \uac83",
+          "channelB": "\uc774\uc601\uc0c1",
+          "channelIdA": "UC1jAafINkHG9ThGUPvmF5-g",
+          "channelIdB": "UCMyk0e2ttKG-5z3ev_XREqw",
+          "countryA": "KR",
+          "countryB": "KR",
+          "videosA": 2,
+          "videosB": 2
+        }
+      ]
+    },
+    {
+      "categoryId": 24,
+      "categoryName": "Entertainment",
+      "pairs": [
+        {
+          "similarity": 1.0,
+          "channelA": "John Campea",
+          "channelB": "ONE 4 ALL",
+          "channelIdA": "UCYyDbdaja1UDNdFSwUrYVGA",
+          "channelIdB": "UCtGDnQSq_MtdYM-UXzQQP6g",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 4
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Kemi TV",
+          "channelB": "KBS \ud55c\uad6d\ubc29\uc1a1",
+          "channelIdA": "UC0EpedkBG2k7kd8UGJuYShQ",
+          "channelIdB": "UC3m0s5XAQydCtbLHc8j1Uog",
+          "countryA": "KR",
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 3
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Andrew Glazunov",
+          "channelB": "\u0410\u043b\u0435\u043a\u0441\u0435\u0439 \u0418\u0432\u0430\u043d\u043e\u0432 ",
+          "channelIdA": "UC2loEmBXM-26MEnAovz-vZw",
+          "channelIdB": "UCC4XGsDekhdsyfwyoT65wfg",
+          "countryA": "DE",
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "\u306f\u3093\u306a\u308a\u30fc\u305a",
+          "channelB": "\u30de\u30c3\u30b9\u30eb\u30af\u30ea\u30c3\u30d7\u30b9",
+          "channelIdA": "UC5LiCoPtOS5Tr_fZ5qLc4eA",
+          "channelIdB": "UC6qEUMw2GJbuDYoK0Y33xHA",
+          "countryA": "JP",
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "SI SURIK",
+          "channelB": "\u041c\u0430\u043a\u0441 \u0438 \u041a\u0441\u044e",
+          "channelIdA": "UC62CdDTJd_jZd8ytL-28jCw",
+          "channelIdB": "UCCwL7sqEDnL5kAxaSs9AjuA",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "\u30d0\u30ad\u7ae5\u30c1\u30e3\u30f3\u30cd\u30eb\u3010\u3050\u3093\u3074\u3043\u3011",
+          "channelB": "\u306f\u3093\u306a\u308a\u30fc\u305a",
+          "channelIdA": "UC8embhEdS-QrY3K6XcoyyNg",
+          "channelIdB": "UC5LiCoPtOS5Tr_fZ5qLc4eA",
+          "countryA": "JP",
+          "countryB": "JP",
+          "videosA": 2,
+          "videosB": 2
+        }
+      ]
+    },
+    {
+      "categoryId": 20,
+      "categoryName": "Gaming",
+      "pairs": [
+        {
+          "similarity": 1.0,
+          "channelA": "Baabtwo",
+          "channelB": "Sapnap",
+          "channelIdA": "UC7vyZVbSz4UV9peF4wZWV7w",
+          "channelIdB": "UCqynl7rdtktKMQESdSBmE-g",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 3,
+          "videosB": 3
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Pack Battle",
+          "channelB": "Trxce",
+          "channelIdA": "UCEdC0AfMqg8IBnX36F4l9Vw",
+          "channelIdB": "UCaOAO0z6m_PKMgWWgcJOYYQ",
+          "countryA": null,
+          "countryB": "US",
+          "videosA": 2,
+          "videosB": 3
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Regena D",
+          "channelB": "\u30b8\u30e3\u30f3\u30ad\u30bd\u30a6",
+          "channelIdA": "UCXf9Ki4HpKB9pHqMKjmAjcg",
+          "channelIdB": "UCtwtpuLuXN8HnwEIe7A_DFw",
+          "countryA": null,
+          "countryB": "JP",
+          "videosA": 3,
+          "videosB": 2
+        },
+        {
+          "similarity": 0.9699,
+          "channelA": "Melon and Sunny",
+          "channelB": "Sunny and Melon",
+          "channelIdA": "UCcoQmP00fejfgYaaqTTtUHA",
+          "channelIdB": "UCeJrNG2hNE-W4N6CueIFyLQ",
+          "countryA": null,
+          "countryB": "US",
+          "videosA": 2,
+          "videosB": 3
+        },
+        {
+          "similarity": 0.9276,
+          "channelA": "steak",
+          "channelB": "Foltyn",
+          "channelIdA": "UC7c8wbA9yQjzxkj2uyrHrkg",
+          "channelIdB": "UCRkuUgtDAL4XSU5jB40J_wA",
+          "countryA": "US",
+          "countryB": null,
+          "videosA": 4,
+          "videosB": 6
+        },
+        {
+          "similarity": 0.9132,
+          "channelA": "Vinesauce: The Full Sauce",
+          "channelB": "RTGame",
+          "channelIdA": "UC2_IYqb1Tc_8Azh7rByedPA",
+          "channelIdB": "UCRC6cNamj9tYAO6h_RXd5xA",
+          "countryA": null,
+          "countryB": "IE",
+          "videosA": 2,
+          "videosB": 3
+        }
+      ]
+    },
+    {
+      "categoryId": 25,
+      "categoryName": "News & Politics",
+      "pairs": [
+        {
+          "similarity": 1.0,
+          "channelA": "MBCNEWS",
+          "channelB": "\u6771\u6d77\u30c6\u30ec\u30d3 \u30cb\u30e5\u30fc\u30b9ONE",
+          "channelIdA": "UCF4Wxdo3inmxP-Y59wXDsFw",
+          "channelIdB": "UCUQ0AtI3k10_CyLYcu4WRVA",
+          "countryA": "KR",
+          "countryB": "JP",
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "\u0412\u0438\u0442\u0435\u0431\u0441\u043a\u0438\u0435 \u0432\u0435\u0441\u0442\u0438",
+          "channelB": "\u041b\u0410\u0419\u0424\u0421\u0422\u041e\u0420\u0418",
+          "channelIdA": "UCH65st7hkRdchprU2fMcerg",
+          "channelIdB": "UCbzZ3aRndyS6iisXs9y4F4A",
+          "countryA": null,
+          "countryB": "UA",
+          "videosA": 2,
+          "videosB": 5
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "News18 Bangla",
+          "channelB": "MBCNEWS",
+          "channelIdA": "UCbf0XHULBkTfv2hBjaaDw9Q",
+          "channelIdB": "UCF4Wxdo3inmxP-Y59wXDsFw",
+          "countryA": "IN",
+          "countryB": "KR",
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": " YTN",
+          "channelB": "MBCNEWS",
+          "channelIdA": "UChlgI3UHCOnwUGzWzbJ3H5w",
+          "channelIdB": "UCF4Wxdo3inmxP-Y59wXDsFw",
+          "countryA": "KR",
+          "countryB": "KR",
+          "videosA": 3,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "TV-KADR",
+          "channelB": "MBCNEWS",
+          "channelIdA": "UCrpoAjT9Ih8mdDzmPVo6Prg",
+          "channelIdB": "UCF4Wxdo3inmxP-Y59wXDsFw",
+          "countryA": null,
+          "countryB": "KR",
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 0.9428,
+          "channelA": "SBS \ub274\uc2a4",
+          "channelB": "JTBC News",
+          "channelIdA": "UCkinYTS9IHqOEwR1Sze2JTw",
+          "channelIdB": "UCsU-I-vHLiaMfV_ceaYz5rQ",
+          "countryA": "KR",
+          "countryB": "KR",
+          "videosA": 3,
+          "videosB": 3
+        }
+      ]
+    },
+    {
+      "categoryId": 17,
+      "categoryName": "Sports",
+      "pairs": [
+        {
+          "similarity": 1.0,
+          "channelA": "J_Tekkz",
+          "channelB": "Magia do Drible Br",
+          "channelIdA": "UC5c7sXwWNvA-KQ_b7OxdsMg",
+          "channelIdB": "UCxOfw2sH4zGX8D_wuCBAvmw",
+          "countryA": "GB",
+          "countryB": null,
+          "videosA": 3,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "sporty mango",
+          "channelB": "\uc6c3\uae30\uc9c0\ub9c8\uc694",
+          "channelIdA": "UCCthbw--LLjLJmE0RhujLXQ",
+          "channelIdB": "UCsp3QShiz_-9mLOlMkO8New",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 3,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "\u3010\u73fe\u5f79\u4f53\u64cd\u9078\u624b\u3011\u30b7\u30c0\u30c3\u30af\u30b9 shidaks",
+          "channelB": "\uccbc\uc790\ub974",
+          "channelIdA": "UCLOl-BrCoVqzSnBsjemMkeQ",
+          "channelIdB": "UCsAZPy2lCmc9am-vevoQsvQ",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Lelands Lures - Trout Magnet - Crappie Magnet",
+          "channelB": "Josh Horton",
+          "channelIdA": "UC_AUHgjLLBaE1j5PSWqrAEA",
+          "channelIdB": "UCc4JGh0O0_AO0Asj6MAS0-w",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 0.8448,
+          "channelA": "\u306a\u3093j\u901f\u5831\u843d\u7403\u30b9\u30ec\u30102ch\u3011\u30105ch\u3011",
+          "channelB": "\u30d9\u30fc\u30b9\u30dc\u30fc\u30eb\u30d6\u30ec\u30f3\u30c9",
+          "channelIdA": "UCLrbS06n9-5hIzo-OGDMByg",
+          "channelIdB": "UCTlcNpoR61icqEOHh0vlhRw",
+          "countryA": null,
+          "countryB": "JP",
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 0.7945,
+          "channelA": "MMG",
+          "channelB": "\ud558\uc624\ubb38",
+          "channelIdA": "UCaYxyR9mzVlTrOOyZD0XAmA",
+          "channelIdB": "UCxhifX9-p58qGyXMyu6hC8w",
+          "countryA": "US",
+          "countryB": "KR",
+          "videosA": 3,
+          "videosB": 2
+        }
+      ]
+    },
+    {
+      "categoryId": 10,
+      "categoryName": "Music",
+      "pairs": [
+        {
+          "similarity": 1.0,
+          "channelA": "POLI",
+          "channelB": "Mr Draganov",
+          "channelIdA": "UC6pyjZgCOlkxV62juSj9Ryg",
+          "channelIdB": "UCK82U3ep55nGX3bRMT5lECQ",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 3
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "AdelaMusicVEVO",
+          "channelB": "Mr Draganov",
+          "channelIdA": "UCTQKXHzgiTuorUqJZnvB16A",
+          "channelIdB": "UCK82U3ep55nGX3bRMT5lECQ",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 7,
+          "videosB": 3
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "ILYAH",
+          "channelB": "POLI",
+          "channelIdA": "UCgDbal1uPJOAZy_tPtP4OMQ",
+          "channelIdB": "UC6pyjZgCOlkxV62juSj9Ryg",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Laufey",
+          "channelB": "POLI",
+          "channelIdA": "UChpKl3waLmccNeYH9LGYjUQ",
+          "channelIdB": "UC6pyjZgCOlkxV62juSj9Ryg",
+          "countryA": "US",
+          "countryB": null,
+          "videosA": 5,
+          "videosB": 2
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Connect-R",
+          "channelB": "sombr",
+          "channelIdA": "UCHzHMCrmkjXyVTkGGrlesfQ",
+          "channelIdB": "UCXlqFQmZZOb78teSnAqhuwA",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 5
+        },
+        {
+          "similarity": 1.0,
+          "channelA": "Black Aura",
+          "channelB": "MN Beats - Topic",
+          "channelIdA": "UCLeMXU7p3dEQ5iGesC7QpqQ",
+          "channelIdB": "UCs_Axh9FzgOKFXzby6bH_sw",
+          "countryA": null,
+          "countryB": null,
+          "videosA": 2,
+          "videosB": 2
+        }
+      ]
+    }
+  ]
+}
