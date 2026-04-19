@@ -315,199 +315,238 @@ export default function ChannelAnalysis() {
   ] as const;
 
   return (
-    <div className="space-y-6">
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
 
-      {/* Header - Base Fade In */}
-      <div className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both">
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">Channel Analysis</h1>
-        <p className="text-sm font-medium mt-2 text-slate-600">
-          {channelTitle
-            ? `High-level integrity and global viral footprint for ${channelTitle}.`
-            : "High-level channel integrity and global viral footprint."}
-        </p>
-      </div>
+        .vo-root {
+          font-family: 'DM Sans', sans-serif;
+          background: #f5f4f0;
+          min-height: 100vh;
+          padding: 40px;
+          color: #1e293b;
+        }
 
-      {loaded && !channel && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm font-medium text-amber-800 animate-in fade-in duration-500">
-          Scan a video on the Video Overview page first to populate channel data here.
-        </div>
-      )}
+        .vo-header {
+          margin-bottom: 36px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+        }
 
-      {/* Top Stats Grid - Delay 150ms */}
-      <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-        <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Channel Origin</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-2xl font-black text-slate-900">{countryCode ?? "—"}</div>
-            <div className="text-sm font-bold text-slate-400">{countryDisplay}</div>
-          </div>
-        </div>
-        <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Total Subscribers</div>
-          <div className="text-2xl font-black text-slate-900">
-            {channel ? numberFmt.format(channel.subscriberCount) : "—"}
-          </div>
-        </div>
-        <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Total Views</div>
-          <div className="text-2xl font-black text-slate-900">
-            {channel ? numberFmt.format(channel.viewCount) : "—"}
-          </div>
-        </div>
-      </div>
+        .vo-title {
+          font-size: 28px;
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          color: #0f172a; /* Dark Navy Text */
+          line-height: 1;
+          margin: 0 0 6px;
+        }
 
-      {/* Bottom Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        .vo-subtitle {
+          font-size: 13px;
+          color: #64748b;
+          font-weight: 400;
+          margin: 0;
+        }
+      `}</style>
 
-        {/* Reliability Score Donut Chart - Delay 300ms */}
-        <div className="bg-white/85 border border-slate-300 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center col-span-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
-          <div className="w-full text-left mb-6">
-            <div className="text-lg font-bold text-slate-900 mb-1">Reliability Score</div>
-            <div className="text-sm font-medium text-slate-500">Overall creator trust tier</div>
-          </div>
-
-          <div className="relative flex items-center justify-center w-40 h-40 mb-4">
-            {/* Donut Background */}
-            <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-              <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e2e8f0" strokeWidth="12" />
-              {/* Donut Fill - calculated from score */}
-              <circle
-                cx="50" cy="50" r="40"
-                fill="transparent"
-                stroke="#2563eb"
-                strokeWidth="12"
-                strokeDasharray="251.2"
-                strokeDashoffset={String(251.2 * (1 - reliabilityScore.score / 100))}
-                strokeLinecap="round"
-                className="drop-shadow-sm"
-              />
-            </svg>
-            {/* Center Text */}
-            <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                {reliabilityScore.score}
-              </span>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">/ 100</span>
-            </div>
-          </div>
-
-          <div className={`text-sm font-bold rounded-xl px-4 py-2.5 border w-full text-center ${reliabilityScore.tierColor}`}>
-            {reliabilityScore.tier}
-          </div>
-        </div>
-
-        {/* Recent Videos Time Series - Delay 500ms */}
-        <div className="bg-white/85 border border-slate-300 rounded-2xl p-6 shadow-sm col-span-2 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
+      <div className="vo-root">
+        {/* Header */}
+        <div className="vo-header">
           <div>
-            <div className="text-lg font-bold text-slate-900 mb-1">5 Most Recent Videos</div>
-            <div className="text-sm font-medium text-slate-500 mb-6">
-              Views, likes, and comments over time (oldest → newest)
+            <h1 className="vo-title">Channel Analysis</h1>
+            <p className="vo-subtitle">
+              {channelTitle
+                ? `High-level integrity and global viral footprint for ${channelTitle}.`
+                : "High-level channel integrity and global viral footprint."}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {loaded && !channel && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm font-medium text-amber-800 animate-in fade-in duration-500">
+              Scan a video on the Video Overview page first to populate channel data here.
+            </div>
+          )}
+
+          {/* Top Stats Grid - Delay 150ms */}
+          <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+            <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Channel Origin</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-2xl font-black text-slate-900">{countryCode ?? "—"}</div>
+                <div className="text-sm font-bold text-slate-400">{countryDisplay}</div>
+              </div>
+            </div>
+            <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Total Subscribers</div>
+              <div className="text-2xl font-black text-slate-900">
+                {channel ? numberFmt.format(channel.subscriberCount) : "—"}
+              </div>
+            </div>
+            <div className="bg-white/85 border border-slate-300 rounded-2xl p-5 shadow-sm">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Total Views</div>
+              <div className="text-2xl font-black text-slate-900">
+                {channel ? numberFmt.format(channel.viewCount) : "—"}
+              </div>
             </div>
           </div>
 
-          {recentLoading && (
-            <div className="text-sm font-medium text-slate-500">Loading recent videos…</div>
-          )}
+          {/* Bottom Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-          {recentError && (
-            <div className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-              {recentError}
+            {/* Reliability Score Donut Chart - Delay 300ms */}
+            <div className="bg-white/85 border border-slate-300 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center col-span-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
+              <div className="w-full text-left mb-6">
+                <div className="text-lg font-bold text-slate-900 mb-1">Reliability Score</div>
+                <div className="text-sm font-medium text-slate-500">Overall creator trust tier</div>
+              </div>
+
+              <div className="relative flex items-center justify-center w-40 h-40 mb-4">
+                {/* Donut Background */}
+                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                  <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e2e8f0" strokeWidth="12" />
+                  {/* Donut Fill - calculated from score */}
+                  <circle
+                    cx="50" cy="50" r="40"
+                    fill="transparent"
+                    stroke="#2563eb"
+                    strokeWidth="12"
+                    strokeDasharray="251.2"
+                    strokeDashoffset={String(251.2 * (1 - reliabilityScore.score / 100))}
+                    strokeLinecap="round"
+                    className="drop-shadow-sm"
+                  />
+                </svg>
+                {/* Center Text */}
+                <div className="absolute flex flex-col items-center justify-center">
+                  <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                    {reliabilityScore.score}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">/ 100</span>
+                </div>
+              </div>
+
+              <div className={`text-sm font-bold rounded-xl px-4 py-2.5 border w-full text-center ${reliabilityScore.tierColor}`}>
+                {reliabilityScore.tier}
+              </div>
             </div>
-          )}
 
-          {!recentLoading && !recentError && !channel && (
-            <div className="text-sm font-medium text-slate-500">
-              Scan a video on the Video Overview page first to load this channel's videos.
-            </div>
-          )}
+            {/* Recent Videos Time Series - Delay 500ms */}
+            <div className="bg-white/85 border border-slate-300 rounded-2xl p-6 shadow-sm col-span-2 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
+              <div>
+                <div className="text-lg font-bold text-slate-900 mb-1">5 Most Recent Videos</div>
+                <div className="text-sm font-medium text-slate-500 mb-6">
+                  Views, likes, and comments over time (oldest → newest)
+                </div>
+              </div>
 
-          {!recentLoading && !recentError && channel && recentVideos.length === 0 && (
-            <div className="text-sm font-medium text-slate-500">
-              No recent videos found for this channel.
-            </div>
-          )}
+              {recentLoading && (
+                <div className="text-sm font-medium text-slate-500">Loading recent videos…</div>
+              )}
 
-          {!recentLoading && !recentError && chartData.length > 0 && (
-            <div className="space-y-2">
-              {seriesMeta.map((s, i) => {
-                const isLast = i === seriesMeta.length - 1;
-                return (
-                  <div key={s.key}>
-                    <div className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-2 mb-1">
-                      {s.label}
-                    </div>
-                    <div
-                      className="w-full"
-                      style={{ height: isLast ? 220 : 130 }}
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={chartData}
-                          margin={{
-                            top: 8,
-                            right: 24,
-                            left: 8,
-                            bottom: isLast ? 80 : 4,
-                          }}
-                          barCategoryGap="25%"
+              {recentError && (
+                <div className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                  {recentError}
+                </div>
+              )}
+
+              {!recentLoading && !recentError && !channel && (
+                <div className="text-sm font-medium text-slate-500">
+                  Scan a video on the Video Overview page first to load this channel's videos.
+                </div>
+              )}
+
+              {!recentLoading && !recentError && channel && recentVideos.length === 0 && (
+                <div className="text-sm font-medium text-slate-500">
+                  No recent videos found for this channel.
+                </div>
+              )}
+
+              {!recentLoading && !recentError && chartData.length > 0 && (
+                <div className="space-y-2">
+                  {seriesMeta.map((s, i) => {
+                    const isLast = i === seriesMeta.length - 1;
+                    return (
+                      <div key={s.key}>
+                        <div className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-2 mb-1">
+                          {s.label}
+                        </div>
+                        <div
+                          className="w-full"
+                          style={{ height: isLast ? 220 : 130 }}
                         >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#e2e8f0"
-                            vertical={false}
-                          />
-                          <XAxis
-                            dataKey="videoId"
-                            interval={0}
-                            tickLine={false}
-                            axisLine={{ stroke: "#cbd5e1" }}
-                            tick={isLast ? <ThumbnailXTick /> : false}
-                            height={isLast ? 80 : 8}
-                          />
-                          <YAxis
-                            tickFormatter={(v: number) => compactFmt.format(v)}
-                            tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
-                            axisLine={{ stroke: "#cbd5e1" }}
-                            tickLine={{ stroke: "#cbd5e1" }}
-                            width={56}
-                          />
-                          <Tooltip
-                            cursor={{ fill: "rgba(30, 58, 138, 0.05)" }}
-                            labelFormatter={(label) => {
-                              const id =
-                                typeof label === "string" ? label : String(label);
-                              return thumbnailByVideoId.get(id)?.title ?? id;
-                            }}
-                            formatter={(value) => [
-                              numberFmt.format(Number(value ?? 0)),
-                              s.label,
-                            ]}
-                            contentStyle={{
-                              background: "rgba(255,255,255,0.95)",
-                              border: "1px solid #cbd5e1",
-                              borderRadius: 10,
-                              fontSize: 12,
-                              maxWidth: 320,
-                            }}
-                            labelStyle={{ fontWeight: 700, color: "#0f172a" }}
-                          />
-                          <Bar
-                            dataKey={s.key}
-                            fill={s.color}
-                            radius={[4, 4, 0, 0]}
-                            maxBarSize={60}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                );
-              })}
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={chartData}
+                              margin={{
+                                top: 8,
+                                right: 24,
+                                left: 8,
+                                bottom: isLast ? 80 : 4,
+                              }}
+                              barCategoryGap="25%"
+                            >
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#e2e8f0"
+                                vertical={false}
+                              />
+                              <XAxis
+                                dataKey="videoId"
+                                interval={0}
+                                tickLine={false}
+                                axisLine={{ stroke: "#cbd5e1" }}
+                                tick={isLast ? <ThumbnailXTick /> : false}
+                                height={isLast ? 80 : 8}
+                              />
+                              <YAxis
+                                tickFormatter={(v: number) => compactFmt.format(v)}
+                                tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
+                                axisLine={{ stroke: "#cbd5e1" }}
+                                tickLine={{ stroke: "#cbd5e1" }}
+                                width={56}
+                              />
+                              <Tooltip
+                                cursor={{ fill: "rgba(30, 58, 138, 0.05)" }}
+                                labelFormatter={(label) => {
+                                  const id =
+                                    typeof label === "string" ? label : String(label);
+                                  return thumbnailByVideoId.get(id)?.title ?? id;
+                                }}
+                                formatter={(value) => [
+                                  numberFmt.format(Number(value ?? 0)),
+                                  s.label,
+                                ]}
+                                contentStyle={{
+                                  background: "rgba(255,255,255,0.95)",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: 10,
+                                  fontSize: 12,
+                                  maxWidth: 320,
+                                }}
+                                labelStyle={{ fontWeight: 700, color: "#0f172a" }}
+                              />
+                              <Bar
+                                dataKey={s.key}
+                                fill={s.color}
+                                radius={[4, 4, 0, 0]}
+                                maxBarSize={60}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
-
       </div>
-    </div>
+    </>
   );
 }

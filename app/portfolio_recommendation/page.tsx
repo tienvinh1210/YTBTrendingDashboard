@@ -48,22 +48,6 @@ const GEO_BUCKETS = [
 
 const MIN_W = 0.5;
 
-/*
- * Copy not shown in UI (product / dev notes):
- * - Page purpose: simulate portfolio allocation, diversity metrics, and content risk; category and region weights
- *   initialize from stage1 training aggregates (portfolio_training_insights.json).
- * - Dollar per row: totalBudget * 0.5 * (weight%/100) — half the budget to category sliders, half to geography.
- * - Diversity score: std-dev(category %) + std-dev(region %), scaled vs max-concentration reference so 0–100.
- * - Reset: restores category and geography weights to the original training-derived baselines.
- * - Slider behavior: increasing a weight takes mass from the smallest other weights first; each group sums to 100%.
- *
- * Typography (uniform):
- * - Page title: text-2xl font-bold
- * - Section headings (h2): text-sm font-semibold tracking-wide uppercase
- * - Body / lists / inputs: text-sm (root wrapper sets text-sm)
- * - KPI numerals in navy strip: text-2xl font-bold tabular-nums where shown
- */
-
 /** Renormalize to sum 100 while keeping each slot at least MIN_W (iterative). */
 function normalizeHundred(w: number[]): number[] {
   let x = [...w];
@@ -320,199 +304,525 @@ export default function PortfolioRecommendation() {
 
   const riskCardClass =
     risk.tone === "low"
-      ? "bg-emerald-100 border-emerald-300 text-emerald-900"
+      ? "vo-risk-low"
       : risk.tone === "med"
-        ? "bg-amber-100 border-amber-300 text-amber-950"
-        : "bg-rose-100 border-rose-300 text-rose-950";
+        ? "vo-risk-med"
+        : "vo-risk-high";
 
   return (
-    <div className="font-sans text-sm text-slate-700 space-y-6 animate-in fade-in duration-500 bg-stone-100/80 -mx-4 px-4 py-6 md:-mx-6 md:px-6 rounded-2xl">
-      <header className="mb-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Corporate Investment Dashboard</h1>
-      </header>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
 
-      {/* Top 5 Similar Videos */}
-      <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6">
-        <div className="flex items-baseline justify-between mb-4 gap-3">
-          <h2 className="text-sm font-semibold tracking-wide text-slate-600 uppercase">
-            Top 5 most popular similar videos
-          </h2>
-          {scan?.video?.categoryName && scan?.channel?.country && (
-            <div className="text-sm font-medium text-slate-500 shrink-0">
-              {scan.video.categoryName} · {scan.channel.country}
-            </div>
-          )}
+        .vo-root {
+          font-family: 'DM Sans', sans-serif;
+          background: #f5f4f0;
+          min-height: 100vh;
+          padding: 40px;
+          color: #1e293b;
+        }
+
+        /* Header */
+        .vo-header {
+          margin-bottom: 36px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+        }
+
+        .vo-title {
+          font-size: 28px;
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          color: #0f172a;
+          line-height: 1;
+          margin: 0 0 6px;
+        }
+
+        .vo-subtitle {
+          font-size: 13px;
+          color: #64748b;
+          font-weight: 400;
+          margin: 0;
+        }
+
+        /* Dashboard Strip */
+        .vo-dash-strip {
+          background: #0f172a; /* Navy background */
+          border-radius: 16px;
+          padding: 24px;
+          display: grid;
+          /* Changed from auto-fit minmax to strictly 4 columns for desktop */
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          margin-bottom: 24px;
+          box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+        }
+
+        .vo-dash-item {
+          background: rgba(30, 41, 59, 0.8);
+          border: 1px solid #334155;
+          border-radius: 12px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .vo-dash-label {
+          font-family: 'DM Mono', monospace;
+          font-size: 11px;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          margin-bottom: 12px;
+          font-weight: 600;
+        }
+
+        .vo-dash-value {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 26px;
+          font-weight: 700;
+          color: #fff;
+          line-height: 1.1;
+        }
+
+        .vo-budget-wrap {
+          display: flex;
+          align-items: center;
+          background: rgba(2, 6, 23, 0.5);
+          border: 1px solid #475569;
+          border-radius: 8px;
+          overflow: hidden;
+          margin-top: 4px;
+        }
+
+        .vo-budget-input {
+          background: transparent;
+          border: none;
+          color: #fff;
+          font-family: 'DM Mono', monospace;
+          font-size: 14px;
+          padding: 12px 12px 12px 6px;
+          width: 100%;
+          outline: none;
+        }
+
+        .vo-progress-track {
+          height: 8px;
+          background: #020617;
+          border-radius: 99px;
+          margin-top: 14px;
+          overflow: hidden;
+        }
+
+        .vo-progress-fill {
+          height: 100%;
+          background: #10b981;
+          border-radius: 99px;
+          transition: width 0.5s ease;
+        }
+
+        .vo-risk-card {
+          border: 2px solid;
+          border-radius: 12px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+
+        .vo-risk-low { background: #d1fae5; border-color: #6ee7b7; color: #064e3b; }
+        .vo-risk-med { background: #fef3c7; border-color: #fcd34d; color: #451a03; }
+        .vo-risk-high { background: #ffe4e6; border-color: #fda4af; color: #881337; }
+
+        .vo-btn-reset {
+          width: 100%;
+          background: #fff;
+          color: #0f172a;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          padding: 12px;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          transition: background 0.15s;
+          margin-top: auto;
+        }
+
+        .vo-btn-reset:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .vo-btn-reset:hover:not(:disabled) {
+          background: #f1f5f9;
+        }
+
+        /* Cards Row */
+        .vo-cards {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          margin-bottom: 16px;
+        }
+
+        .vo-card {
+          background: #fff;
+          border: 1px solid #cbd5e1;
+          border-radius: 12px;
+          padding: 26px;
+        }
+
+        .vo-card-title {
+          font-family: 'DM Mono', monospace;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #64748b;
+          margin: 0 0 24px;
+          display: flex;
+          justify-content: space-between;
+        }
+
+        /* Sliders */
+        .vo-slider-row {
+          margin-bottom: 24px;
+        }
+
+        .vo-slider-row:last-child {
+          margin-bottom: 0;
+        }
+
+        .vo-slider-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 10px;
+        }
+
+        .vo-slider-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: #0f172a;
+          line-height: 1.2;
+        }
+
+        .vo-slider-sub {
+          font-family: 'DM Mono', monospace;
+          font-size: 12px;
+          color: #64748b;
+          margin-top: 4px;
+        }
+
+        .vo-slider-val {
+          font-family: 'DM Mono', monospace;
+          font-size: 13px;
+          font-weight: 600;
+          color: #334155;
+        }
+
+        .vo-slider {
+          width: 100%;
+          height: 8px;
+          border-radius: 4px;
+          background: #e2e8f0;
+          outline: none;
+          -webkit-appearance: none;
+        }
+
+        .vo-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          cursor: pointer;
+        }
+
+        .vo-slider.cat-slider::-webkit-slider-thumb { background: #1e3a8a; } /* Navy */
+        .vo-slider.geo-slider::-webkit-slider-thumb { background: #7c3aed; } /* Violet */
+
+        /* Video List */
+        .vo-video-list {
+          margin: 0;
+          padding: 0 0 0 20px;
+          color: #1e3a8a;
+        }
+
+        .vo-video-item {
+          margin-bottom: 10px;
+          line-height: 1.5;
+        }
+
+        .vo-video-link {
+          font-weight: 600;
+          color: #1e3a8a;
+          text-decoration: underline;
+          text-decoration-color: #93c5fd;
+          text-underline-offset: 3px;
+        }
+
+        .vo-video-link:hover {
+          color: #1d4ed8;
+        }
+
+        .vo-video-meta {
+          font-size: 13px;
+          color: #64748b;
+          font-weight: 500;
+        }
+
+        /* Helpers */
+        .vo-alert {
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          margin-bottom: 16px;
+        }
+
+        .vo-alert-error {
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          color: #b91c1c;
+        }
+
+        .vo-alert-warn {
+          background: #fffbeb;
+          border: 1px solid #fde68a;
+          color: #92400e;
+        }
+
+        /* Fade-in */
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .vo-reveal {
+          animation: fadeUp 0.4s ease forwards;
+        }
+
+        .vo-reveal-1 { animation-delay: 0.05s; opacity: 0; }
+        .vo-reveal-2 { animation-delay: 0.12s; opacity: 0; }
+        .vo-reveal-3 { animation-delay: 0.19s; opacity: 0; }
+
+        @media (max-width: 1024px) {
+          .vo-dash-strip {
+            /* Stack 2x2 on tablets */
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .vo-cards {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .vo-dash-strip {
+            /* Full stack on phones */
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+
+      <div className="vo-root">
+        {/* Header */}
+        <div className="vo-header">
+          <div>
+            <h1 className="vo-title">Corporate Investment Dashboard</h1>
+          </div>
         </div>
 
-        {scanLoaded && !scan && (
-          <div className="text-sm font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-            Scan a video on the Video Overview page first to see related recommendations.
+        {/* Training Insights Error */}
+        {trainingInsightsError && (
+          <div className="vo-alert vo-alert-warn vo-reveal">
+            {trainingInsightsError}
           </div>
         )}
 
-        {recsError && (
-          <div className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-            {recsError}
-          </div>
-        )}
-
-        {recsLoading && <div className="text-sm font-medium text-slate-500">Loading recommendations…</div>}
-
-        {!recsLoading && !recsError && recommendations.length > 0 && (
-          <ul className="list-disc pl-6 space-y-2 marker:text-blue-900 text-sm leading-relaxed">
-            {recommendations.map((v) => (
-              <li key={v.videoId}>
-                <a
-                  href={v.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-blue-900 hover:text-blue-700 underline decoration-blue-300 underline-offset-2"
-                >
-                  {v.title}
-                </a>
-                <span className="text-slate-500 font-medium"> — {v.channelTitle}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {!recsLoading && !recsError && scan && recommendations.length === 0 && (
-          <div className="text-sm font-medium text-slate-500">
-            No similar videos found for this category and region.
-          </div>
-        )}
-      </div>
-
-      {/* Navy summary strip */}
-      <div className="rounded-2xl bg-slate-900 text-white p-6 shadow-lg">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-4">
-            <h2 className="text-sm font-semibold tracking-wide text-slate-400 uppercase mb-2">Total budget ($)</h2>
-            <div className="relative flex items-center rounded-lg border border-slate-600 bg-slate-950/50 overflow-hidden">
-              <span className="pl-3 text-slate-300 font-medium select-none text-sm" aria-hidden>
-                $
-              </span>
+        {/* Dashboard Strip */}
+        <div className="vo-dash-strip vo-reveal vo-reveal-1">
+          <div className="vo-dash-item">
+            <div className="vo-dash-label">Total budget ($)</div>
+            <div className="vo-budget-wrap">
+              <span style={{ color: '#94a3b8', paddingLeft: '12px', fontSize: '14px', fontFamily: 'DM Mono, monospace' }}>$</span>
               <input
                 type="text"
                 inputMode="decimal"
                 value={budgetInput}
                 onChange={(e) => setBudgetInput(e.target.value)}
-                className="w-full min-w-0 bg-transparent py-2.5 pr-3 pl-1 text-white text-sm tabular-nums outline-none"
+                className="vo-budget-input"
                 placeholder="0"
               />
             </div>
           </div>
 
-          <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-4 flex flex-col justify-between">
-            <h2 className="text-sm font-semibold tracking-wide text-slate-400 uppercase mb-2">Diversity score</h2>
-            <div className="text-2xl font-bold text-white tabular-nums leading-tight">
-              {diversityScore}
-              <span className="text-sm font-medium text-slate-400"> / 100</span>
+          <div className="vo-dash-item">
+            <div className="vo-dash-label">Diversity score</div>
+            <div>
+              <span className="vo-dash-value">{diversityScore}</span>
+              <span style={{ fontSize: '14px', color: '#94a3b8', marginLeft: '6px' }}>/ 100</span>
             </div>
-            <div className="mt-3 h-2 rounded-full bg-slate-950 overflow-hidden">
+            <div className="vo-progress-track">
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                className="vo-progress-fill"
                 style={{ width: `${diversityScore}%` }}
               />
             </div>
           </div>
 
-          <div
-            className={`rounded-xl border-2 p-4 flex flex-col items-center justify-center text-center min-h-[120px] ${riskCardClass}`}
-          >
-            <h2 className="text-sm font-semibold tracking-wide uppercase opacity-80 mb-1">Risk classification</h2>
-            <div className="text-2xl font-bold leading-tight">{risk.label}</div>
+          <div className={`vo-risk-card ${riskCardClass}`}>
+            <div className="vo-dash-label" style={{ color: 'inherit', opacity: 0.8, marginBottom: '6px' }}>
+              Risk classification
+            </div>
+            <div className="vo-dash-value" style={{ color: 'inherit' }}>
+              {risk.label}
+            </div>
           </div>
 
-          <div className="rounded-xl bg-slate-800/80 border border-slate-700 p-4 flex flex-col justify-center gap-3">
-            <h2 className="text-sm font-semibold tracking-wide text-slate-400 uppercase">Reset weights</h2>
+          <div className="vo-dash-item">
+            <div className="vo-dash-label">Reset weights</div>
             <button
               type="button"
               onClick={resetWeights}
               disabled={!baselineCategory.length || !baselineGeo.length}
-              className="w-full rounded-lg bg-white text-slate-900 font-semibold py-2.5 text-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="vo-btn-reset"
             >
-              Reset 
+              Reset
             </button>
           </div>
         </div>
-      </div>
 
-      {trainingInsightsError && (
-        <div className="text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-          {trainingInsightsError}
-        </div>
-      )}
-
-      {/* Weighting cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-sm font-semibold tracking-wide text-slate-600 uppercase mb-5">Category weighting</h2>
-          {!categoryPct.length ? (
-            <p className="text-sm font-medium text-slate-500">Loading weights from training data…</p>
-          ) : (
-            <div className="space-y-5">
-              {categoryPct.map((pct, i) => {
-                const maxOne = 100 - MIN_W * (categoryPct.length - 1);
-                return (
-                  <div key={i}>
-                    <div className="flex justify-between items-start gap-3 mb-2">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">{categoryLabels[i] ?? `Category ${i + 1}`}</div>
-                        <div className="text-sm font-medium text-slate-500 mt-0.5 tabular-nums">{formatUsd(categoryDollars[i])}</div>
+        {/* Weighting Cards */}
+        <div className="vo-cards vo-reveal vo-reveal-2">
+          {/* Category Weighting */}
+          <div className="vo-card">
+            <h2 className="vo-card-title">Category weighting</h2>
+            {!categoryPct.length ? (
+              <p style={{ fontSize: '13px', color: '#64748b' }}>Loading weights from training data…</p>
+            ) : (
+              <div>
+                {categoryPct.map((pct, i) => {
+                  const maxOne = 100 - MIN_W * (categoryPct.length - 1);
+                  return (
+                    <div key={i} className="vo-slider-row">
+                      <div className="vo-slider-header">
+                        <div>
+                          <div className="vo-slider-name">{categoryLabels[i] ?? `Category ${i + 1}`}</div>
+                          <div className="vo-slider-sub">{formatUsd(categoryDollars[i])}</div>
+                        </div>
+                        <div className="vo-slider-val">{pct.toFixed(1)}%</div>
                       </div>
-                      <div className="text-sm font-semibold text-slate-700 tabular-nums">{pct.toFixed(1)}%</div>
+                      <input
+                        type="range"
+                        min={MIN_W}
+                        max={maxOne}
+                        step={0.1}
+                        value={Math.min(Math.max(pct, MIN_W), maxOne)}
+                        onChange={(e) => onCategorySlider(i, parseFloat(e.target.value))}
+                        className="vo-slider cat-slider"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min={MIN_W}
-                      max={maxOne}
-                      step={0.1}
-                      value={Math.min(Math.max(pct, MIN_W), maxOne)}
-                      onChange={(e) => onCategorySlider(i, parseFloat(e.target.value))}
-                      className="w-full h-2 rounded-full appearance-none cursor-pointer accent-blue-700 bg-slate-200 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-800"
-                    />
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Geographic Weighting */}
+          <div className="vo-card">
+            <h2 className="vo-card-title">Geographic weighting</h2>
+            {!geoPct.length ? (
+              <p style={{ fontSize: '13px', color: '#64748b' }}>Loading weights from training data…</p>
+            ) : (
+              <div>
+                {geoPct.map((pct, i) => {
+                  const maxOne = 100 - MIN_W * (geoPct.length - 1);
+                  return (
+                    <div key={GEO_BUCKETS[i].key} className="vo-slider-row">
+                      <div className="vo-slider-header">
+                        <div>
+                          <div className="vo-slider-name">{GEO_BUCKETS[i].label}</div>
+                          <div className="vo-slider-sub">{formatUsd(geoDollars[i])}</div>
+                        </div>
+                        <div className="vo-slider-val">{pct.toFixed(1)}%</div>
+                      </div>
+                      <input
+                        type="range"
+                        min={MIN_W}
+                        max={maxOne}
+                        step={0.1}
+                        value={Math.min(Math.max(pct, MIN_W), maxOne)}
+                        onChange={(e) => onGeoSlider(i, parseFloat(e.target.value))}
+                        className="vo-slider geo-slider"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Top 5 Similar Videos (Moved to Bottom) */}
+        <div className="vo-card vo-reveal vo-reveal-3">
+          <h2 className="vo-card-title">
+            <span>Top 5 most popular similar videos</span>
+            {scan?.video?.categoryName && scan?.channel?.country && (
+              <span style={{ textTransform: 'none', color: '#64748b' }}>
+                {scan.video.categoryName} · {scan.channel.country}
+              </span>
+            )}
+          </h2>
+
+          {scanLoaded && !scan && (
+            <div className="vo-alert vo-alert-warn">
+              Scan a video on the Video Overview page first to see related recommendations.
             </div>
           )}
-        </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-sm font-semibold tracking-wide text-slate-600 uppercase mb-5">Geographic weighting</h2>
-          {!geoPct.length ? (
-            <p className="text-sm font-medium text-slate-500">Loading weights from training data…</p>
-          ) : (
-            <div className="space-y-5">
-              {geoPct.map((pct, i) => {
-                const maxOne = 100 - MIN_W * (geoPct.length - 1);
-                return (
-                  <div key={GEO_BUCKETS[i].key}>
-                    <div className="flex justify-between items-start gap-3 mb-2">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">{GEO_BUCKETS[i].label}</div>
-                        <div className="text-sm font-medium text-slate-500 mt-0.5 tabular-nums">{formatUsd(geoDollars[i])}</div>
-                      </div>
-                      <div className="text-sm font-semibold text-slate-700 tabular-nums">{pct.toFixed(1)}%</div>
-                    </div>
-                    <input
-                      type="range"
-                      min={MIN_W}
-                      max={maxOne}
-                      step={0.1}
-                      value={Math.min(Math.max(pct, MIN_W), maxOne)}
-                      onChange={(e) => onGeoSlider(i, parseFloat(e.target.value))}
-                      className="w-full h-2 rounded-full appearance-none cursor-pointer accent-violet-600 bg-slate-200 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-violet-600"
-                    />
-                  </div>
-                );
-              })}
+          {recsError && (
+            <div className="vo-alert vo-alert-error">
+              {recsError}
             </div>
+          )}
+
+          {recsLoading && (
+            <p style={{ fontSize: '13px', color: '#64748b' }}>Loading recommendations…</p>
+          )}
+
+          {!recsLoading && !recsError && recommendations.length > 0 && (
+            <ul className="vo-video-list">
+              {recommendations.map((v) => (
+                <li key={v.videoId} className="vo-video-item">
+                  <a
+                    href={v.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="vo-video-link"
+                  >
+                    {v.title}
+                  </a>
+                  <span className="vo-video-meta"> — {v.channelTitle}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {!recsLoading && !recsError && scan && recommendations.length === 0 && (
+            <p style={{ fontSize: '13px', color: '#64748b' }}>
+              No similar videos found for this category and region.
+            </p>
           )}
         </div>
       </div>
-
-    </div>
+    </>
   );
 }

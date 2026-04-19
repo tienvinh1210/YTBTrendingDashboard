@@ -488,7 +488,6 @@ function VideoOverviewContent() {
         <div className="vo-header">
           <div>
             <h1 className="vo-title">Video Asset Overview</h1>
-            <p className="vo-subtitle">Analyze a video's trajectory and viral risk profile.</p>
           </div>
         </div>
 
