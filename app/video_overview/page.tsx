@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type VideoInfo = {
   id: string;
@@ -22,6 +23,33 @@ type ChannelInfo = {
   videoCount: number;
 };
 
+type Stage1Prediction = {
+  probability: number;
+  probability_percent: number;
+  risk_label: string;
+  predicted_trendy: boolean;
+  predicted_class: number;
+};
+
+type Stage2Prediction = {
+  vpd_class: number;
+  vpd_class_label: string;
+  class_probabilities: number[];
+  predicted_class_confidence: number;
+};
+
+type ViralityHint = {
+  feature: string;
+  importance: number;
+  hint: string;
+};
+
+type PipelineResult = {
+  stage1: Stage1Prediction;
+  stage2: Stage2Prediction | null;
+  virality_hints: ViralityHint[] | null;
+};
+
 const numberFmt = new Intl.NumberFormat("en-US");
 const dateFmt = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
@@ -31,20 +59,27 @@ const dateFmt = new Intl.DateTimeFormat("en-US", {
 
 const STORAGE_KEY = "yourisk:lastScan";
 
-export default function VideoOverview() {
+function VideoOverviewContent() {
+  const searchParams = useSearchParams();
   const [url, setUrl] = useState("");
   const [video, setVideo] = useState<VideoInfo | null>(null);
+  const [pipeline, setPipeline] = useState<PipelineResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [predictNote, setPredictNote] = useState<string | null>(null);
+  const autoScannedRef = useRef<string | null>(null);
 
   const hasData = !!video;
 
-  async function handleScan() {
-    if (!url.trim() || loading) return;
+  async function handleScan(urlOverride?: string) {
+    const target = (urlOverride ?? url).trim();
+    if (!target || loading) return;
     setLoading(true);
     setError(null);
+    setPredictNote(null);
+    setPipeline(null);
     try {
-      const res = await fetch(`/api/youtube?url=${encodeURIComponent(url)}`);
+      const res = await fetch(`/api/youtube?url=${encodeURIComponent(target)}`);
       const data = (await res.json()) as
         | { video: VideoInfo; channel: ChannelInfo | null }
         | { error: string };
@@ -53,6 +88,21 @@ export default function VideoOverview() {
         throw new Error(message);
       }
       setVideo(data.video);
+
+      const pr = await fetch("/api/trending-predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ video: data.video, channel: data.channel }),
+      });
+      const predJson = (await pr.json()) as PipelineResult | { error: string };
+      if (!pr.ok || "error" in predJson) {
+        const msg = "error" in predJson ? predJson.error : "Model prediction failed.";
+        setPredictNote(msg);
+        setPipeline(null);
+      } else {
+        setPipeline(predJson);
+      }
+
       if (typeof window !== "undefined") {
         window.localStorage.setItem(
           STORAGE_KEY,
@@ -63,10 +113,21 @@ export default function VideoOverview() {
       const message = e instanceof Error ? e.message : "Unexpected error.";
       setError(message);
       setVideo(null);
+      setPipeline(null);
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const fromQuery = searchParams.get("url");
+    if (!fromQuery) return;
+    if (autoScannedRef.current === fromQuery) return;
+    autoScannedRef.current = fromQuery;
+    setUrl(fromQuery);
+    handleScan(fromQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <>
@@ -351,7 +412,7 @@ export default function VideoOverview() {
           />
           <button
             className="vo-btn"
-            onClick={handleScan}
+            onClick={() => handleScan()}
             disabled={loading || !url.trim()}
             style={loading || !url.trim() ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
           >
@@ -399,35 +460,128 @@ export default function VideoOverview() {
 
             {/* Cards */}
             <div className="vo-cards vo-reveal vo-reveal-2">
-              {/* Trending Prediction */}
+              {/* Trending Prediction (Stage 1) */}
               <div className="vo-card">
                 <p className="vo-card-title">Trending Prediction</p>
-                <p className="vo-card-sub">Viral probability based on active link graph</p>
-                <div className="vo-prob-row">
-                  <span className="vo-prob-value">88%</span>
-                  <span className="vo-pill">HIGH</span>
-                </div>
-                <div className="vo-track">
-                  <div className="vo-fill" />
-                </div>
+                <p className="vo-card-sub">Stage 1 model — probability of trending (leak-free features)</p>
+                {pipeline ? (
+                  <>
+                    <div className="vo-prob-row">
+                      <span className="vo-prob-value">{pipeline.stage1.probability_percent}%</span>
+                      <span className="vo-pill">{pipeline.stage1.risk_label}</span>
+                    </div>
+                    <div className="vo-track">
+                      <div
+                        className="vo-fill"
+                        style={{ width: `${Math.min(100, Math.max(0, pipeline.stage1.probability_percent))}%` }}
+                      />
+                    </div>
+                    <p style={{ fontSize: 12, color: "#64748b", marginTop: 14, marginBottom: 0 }}>
+                      {pipeline.stage1.predicted_trendy
+                        ? "Model predicts this asset is likely to trend."
+                        : "Model predicts not trending — see post-trend outlook and levers below."}
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ fontSize: 13, color: "#64748b", marginTop: 8 }}>
+                    {predictNote
+                      ? `Prediction unavailable: ${predictNote}`
+                      : "Run a scan to load model scores (requires YTBTrendingDashboard/models/*.json + Python)."}
+                  </p>
+                )}
               </div>
 
-              {/* Viral Span Prediction */}
+              {/* Stage 2 or momentum placeholder */}
               <div className="vo-card vo-reveal vo-reveal-3">
-                <p className="vo-card-title">Viral Span Prediction</p>
-                <p className="vo-card-sub">Estimated days to reach viral peak</p>
-                <div className="vo-days-number">14</div>
-                <span className="vo-days-unit">days to peak velocity</span>
-                <div className="vo-peak-row">
-                  <div className="vo-dot" />
-                  <span className="vo-peak-label">Expected peak date</span>
-                  <span className="vo-peak-date">2026-05-02</span>
-                </div>
+                {pipeline && !pipeline.stage1.predicted_trendy && pipeline.stage2 ? (
+                  <>
+                    <p className="vo-card-title">Post-trend outlook</p>
+                    <p className="vo-card-sub">Stage 2 — sustained views/day after trending ends</p>
+                    <div className="vo-days-number" style={{ fontSize: 22, lineHeight: 1.3, fontWeight: 600 }}>
+                      {pipeline.stage2.vpd_class_label}
+                    </div>
+                    <span className="vo-days-unit">
+                      Confidence {Math.round(pipeline.stage2.predicted_class_confidence * 100)}% · Classes
+                      fading / steady / thriving
+                    </span>
+                    <div className="vo-peak-row" style={{ flexWrap: "wrap", gap: 8 }}>
+                      {pipeline.stage2.class_probabilities.map((p, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            fontFamily: "DM Mono, monospace",
+                            fontSize: 11,
+                            padding: "4px 8px",
+                            borderRadius: 6,
+                            background: "#f1f5f9",
+                            color: "#475569",
+                          }}
+                        >
+                          {i}: {(p * 100).toFixed(0)}%
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                ) : pipeline && pipeline.stage1.predicted_trendy ? (
+                  <>
+                    <p className="vo-card-title">Momentum</p>
+                    <p className="vo-card-sub">Strong trending signal — post-trend model skipped</p>
+                    <div className="vo-days-number" style={{ fontSize: 36 }}>
+                      {pipeline.stage1.probability_percent}%
+                    </div>
+                    <span className="vo-days-unit">Stage 2 runs only when Stage 1 is negative.</span>
+                  </>
+                ) : (
+                  <>
+                    <p className="vo-card-title">Post-trend outlook</p>
+                    <p className="vo-card-sub">Stage 2 runs when Stage 1 predicts not trending</p>
+                    <p style={{ fontSize: 13, color: "#64748b", marginTop: 8 }}>—</p>
+                  </>
+                )}
               </div>
             </div>
+
+            {pipeline && pipeline.virality_hints && pipeline.virality_hints.length > 0 && (
+              <div
+                className="vo-reveal vo-reveal-3"
+                style={{
+                  marginTop: 20,
+                  background: "#fff",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 12,
+                  padding: "22px 26px",
+                }}
+              >
+                <p className="vo-card-title" style={{ marginBottom: 4 }}>
+                  Virality levers (top signals)
+                </p>
+                <p className="vo-card-sub" style={{ marginBottom: 18 }}>
+                  Global drivers from the Stage 1 model when the asset is not predicted to trend
+                </p>
+                <ol style={{ margin: 0, paddingLeft: 18, color: "#334155", fontSize: 13, lineHeight: 1.55 }}>
+                  {pipeline.virality_hints.map((h) => (
+                    <li key={h.feature} style={{ marginBottom: 10 }}>
+                      <strong style={{ fontFamily: "DM Mono, monospace", fontSize: 12 }}>{h.feature}</strong>
+                      <span style={{ color: "#94a3b8", marginLeft: 8 }}>
+                        (weight {h.importance.toFixed(4)})
+                      </span>
+                      <div style={{ color: "#64748b", marginTop: 4 }}>{h.hint}</div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </>
         )}
       </div>
     </>
+  );
+}
+
+export default function VideoOverview() {
+  return (
+    <Suspense fallback={null}>
+      <VideoOverviewContent />
+    </Suspense>
   );
 }
