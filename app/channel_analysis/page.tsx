@@ -2,10 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
-  Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -120,8 +119,15 @@ export default function ChannelAnalysis() {
   const countryCode = channel?.country ?? null;
   const countryDisplay = getCountryName(countryCode);
 
-  // Reverse so the most recent video sits at the top of the chart.
-  const chartData = useMemo(() => [...recentVideos].reverse(), [recentVideos]);
+  // Sort ascending by publish date so the time series reads left → right (oldest → newest).
+  const chartData = useMemo(
+    () =>
+      [...recentVideos].sort(
+        (a, b) =>
+          new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()
+      ),
+    [recentVideos]
+  );
   const thumbnailByVideoId = useMemo(() => {
     const m = new Map<string, RecentVideo>();
     recentVideos.forEach((v) => m.set(v.videoId, v));
@@ -133,14 +139,14 @@ export default function ChannelAnalysis() {
     y?: number;
     payload?: { value: string };
   };
-  const ThumbnailTick = (props: AxisTickProps) => {
+  const ThumbnailXTick = (props: AxisTickProps) => {
     const { x = 0, y = 0, payload } = props;
     const v = payload ? thumbnailByVideoId.get(payload.value) : undefined;
     if (!v) return null;
-    const w = 96;
-    const h = 54;
+    const w = 84;
+    const h = 47;
     return (
-      <g transform={`translate(${x - w - 8}, ${y - h / 2})`}>
+      <g transform={`translate(${x - w / 2}, ${y + 8})`}>
         <a href={v.url} target="_blank" rel="noopener noreferrer">
           <image
             href={v.thumbnailUrl}
@@ -153,6 +159,12 @@ export default function ChannelAnalysis() {
       </g>
     );
   };
+
+  const seriesMeta = [
+    { key: "viewCount", label: "Views", color: "#1e3a8a" },
+    { key: "likeCount", label: "Likes", color: "#2563eb" },
+    { key: "commentCount", label: "Comments", color: "#60a5fa" },
+  ] as const;
 
   return (
     <div className="space-y-6">
@@ -234,12 +246,12 @@ export default function ChannelAnalysis() {
           </div>
         </div>
 
-        {/* Recent Videos Bar Chart - Delay 500ms */}
+        {/* Recent Videos Time Series - Delay 500ms */}
         <div className="bg-white/85 border border-slate-300 rounded-2xl p-6 shadow-sm col-span-2 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
           <div>
             <div className="text-lg font-bold text-slate-900 mb-1">5 Most Recent Videos</div>
             <div className="text-sm font-medium text-slate-500 mb-6">
-              Views, likes, and comments per video
+              Views, likes, and comments over time (oldest → newest)
             </div>
           </div>
 
@@ -266,59 +278,83 @@ export default function ChannelAnalysis() {
           )}
 
           {!recentLoading && !recentError && chartData.length > 0 && (
-            <div className="w-full" style={{ height: chartData.length * 80 + 60 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  layout="vertical"
-                  margin={{ top: 8, right: 24, left: 110, bottom: 8 }}
-                  barCategoryGap={18}
-                  barGap={4}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                  <XAxis
-                    type="number"
-                    tickFormatter={(v: number) => compactFmt.format(v)}
-                    tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
-                    axisLine={{ stroke: "#cbd5e1" }}
-                    tickLine={{ stroke: "#cbd5e1" }}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="videoId"
-                    width={104}
-                    interval={0}
-                    tickLine={false}
-                    axisLine={{ stroke: "#cbd5e1" }}
-                    tick={<ThumbnailTick />}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "rgba(30, 58, 138, 0.05)" }}
-                    labelFormatter={(label) => {
-                      const id = typeof label === "string" ? label : String(label);
-                      return thumbnailByVideoId.get(id)?.title ?? id;
-                    }}
-                    formatter={(value, name) => [
-                      numberFmt.format(Number(value ?? 0)),
-                      String(name ?? ""),
-                    ]}
-                    contentStyle={{
-                      background: "rgba(255,255,255,0.95)",
-                      border: "1px solid #cbd5e1",
-                      borderRadius: 10,
-                      fontSize: 12,
-                      maxWidth: 320,
-                    }}
-                    labelStyle={{ fontWeight: 700, color: "#0f172a" }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: 12, fontWeight: 600, color: "#475569" }}
-                  />
-                  <Bar dataKey="viewCount" name="Views" fill="#1e3a8a" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="likeCount" name="Likes" fill="#2563eb" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="commentCount" name="Comments" fill="#60a5fa" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="space-y-2">
+              {seriesMeta.map((s, i) => {
+                const isLast = i === seriesMeta.length - 1;
+                return (
+                  <div key={s.key}>
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-2 mb-1">
+                      {s.label}
+                    </div>
+                    <div
+                      className="w-full"
+                      style={{ height: isLast ? 200 : 130 }}
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={chartData}
+                          margin={{
+                            top: 8,
+                            right: 24,
+                            left: 8,
+                            bottom: isLast ? 65 : 4,
+                          }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#e2e8f0"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="videoId"
+                            interval={0}
+                            tickLine={false}
+                            axisLine={{ stroke: "#cbd5e1" }}
+                            tick={isLast ? <ThumbnailXTick /> : false}
+                            height={isLast ? 65 : 8}
+                          />
+                          <YAxis
+                            tickFormatter={(v: number) => compactFmt.format(v)}
+                            tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
+                            axisLine={{ stroke: "#cbd5e1" }}
+                            tickLine={{ stroke: "#cbd5e1" }}
+                            width={56}
+                          />
+                          <Tooltip
+                            cursor={{ stroke: "#94a3b8", strokeDasharray: "3 3" }}
+                            labelFormatter={(label) => {
+                              const id =
+                                typeof label === "string" ? label : String(label);
+                              return thumbnailByVideoId.get(id)?.title ?? id;
+                            }}
+                            formatter={(value) => [
+                              numberFmt.format(Number(value ?? 0)),
+                              s.label,
+                            ]}
+                            contentStyle={{
+                              background: "rgba(255,255,255,0.95)",
+                              border: "1px solid #cbd5e1",
+                              borderRadius: 10,
+                              fontSize: 12,
+                              maxWidth: 320,
+                            }}
+                            labelStyle={{ fontWeight: 700, color: "#0f172a" }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey={s.key}
+                            stroke={s.color}
+                            strokeWidth={2.5}
+                            dot={{ r: 4, fill: s.color, strokeWidth: 0 }}
+                            activeDot={{ r: 6 }}
+                            isAnimationActive
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
