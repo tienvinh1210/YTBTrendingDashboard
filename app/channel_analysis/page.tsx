@@ -1,6 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 type ChannelInfo = {
   id: string;
@@ -16,8 +26,23 @@ type StoredScan = {
   channel: ChannelInfo | null;
 };
 
+type RecentVideo = {
+  videoId: string;
+  title: string;
+  url: string;
+  thumbnailUrl: string;
+  publishedAt: string;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+};
+
 const STORAGE_KEY = "yourisk:lastScan";
 const numberFmt = new Intl.NumberFormat("en-US");
+const compactFmt = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 
 let regionNames: Intl.DisplayNames | null = null;
 function getCountryName(code: string | null): string {
@@ -45,6 +70,9 @@ export default function ChannelAnalysis() {
   const [channel, setChannel] = useState<ChannelInfo | null>(null);
   const [channelTitle, setChannelTitle] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [recentVideos, setRecentVideos] = useState<RecentVideo[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [recentError, setRecentError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -62,24 +90,69 @@ export default function ChannelAnalysis() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!channel?.id) return;
+    const controller = new AbortController();
+    setRecentLoading(true);
+    setRecentError(null);
+
+    fetch(`/api/youtube/channel-videos?channelId=${encodeURIComponent(channel.id)}&max=5`, {
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        const data = (await res.json()) as
+          | { items: RecentVideo[] }
+          | { error: string };
+        if (!res.ok || "error" in data) {
+          throw new Error("error" in data ? data.error : "Failed to load videos.");
+        }
+        setRecentVideos(data.items);
+      })
+      .catch((e: unknown) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setRecentError(e instanceof Error ? e.message : "Unexpected error.");
+      })
+      .finally(() => setRecentLoading(false));
+
+    return () => controller.abort();
+  }, [channel?.id]);
+
   const countryCode = channel?.country ?? null;
   const countryDisplay = getCountryName(countryCode);
 
-  const getHeatmapColor = (val: number) => {
-    if (val >= 80) return 'bg-blue-600 text-white shadow-sm';
-    if (val >= 60) return 'bg-blue-400 text-white shadow-sm';
-    if (val >= 40) return 'bg-blue-200 text-blue-900';
-    return 'bg-slate-100 text-slate-500';
+  // Reverse so the most recent video sits at the top of the chart.
+  const chartData = useMemo(() => [...recentVideos].reverse(), [recentVideos]);
+  const thumbnailByVideoId = useMemo(() => {
+    const m = new Map<string, RecentVideo>();
+    recentVideos.forEach((v) => m.set(v.videoId, v));
+    return m;
+  }, [recentVideos]);
+
+  type AxisTickProps = {
+    x?: number;
+    y?: number;
+    payload?: { value: string };
   };
-
-  const heatmapData = [
-    { category: 'Tech Reviews', scores: [95, 82, 78, 61, 40] },
-    { category: 'How-to / Tutorials', scores: [88, 75, 72, 80, 52] },
-    { category: 'Entertainment', scores: [60, 58, 55, 72, 66] },
-    { category: 'Gaming', scores: [42, 38, 40, 55, 78] },
-  ];
-
-  const regions = ['US', 'GB', 'CA', 'IN', 'JP'];
+  const ThumbnailTick = (props: AxisTickProps) => {
+    const { x = 0, y = 0, payload } = props;
+    const v = payload ? thumbnailByVideoId.get(payload.value) : undefined;
+    if (!v) return null;
+    const w = 96;
+    const h = 54;
+    return (
+      <g transform={`translate(${x - w - 8}, ${y - h / 2})`}>
+        <a href={v.url} target="_blank" rel="noopener noreferrer">
+          <image
+            href={v.thumbnailUrl}
+            width={w}
+            height={h}
+            preserveAspectRatio="xMidYMid slice"
+            style={{ borderRadius: 6 }}
+          />
+        </a>
+      </g>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -161,52 +234,93 @@ export default function ChannelAnalysis() {
           </div>
         </div>
 
-        {/* Global Viral Heatmap - Delay 500ms */}
-        <div className="bg-white/85 border border-slate-300 rounded-2xl p-6 shadow-sm col-span-2 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
+        {/* Recent Videos Bar Chart - Delay 500ms */}
+        <div className="bg-white/85 border border-slate-300 rounded-2xl p-6 shadow-sm col-span-2 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
           <div>
-            <div className="text-lg font-bold text-slate-900 mb-1">Viral Footprint Heatmap</div>
-            <div className="text-sm font-medium text-slate-500 mb-6">Trending category strength across top regions</div>
-          </div>
-
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-sm text-left border-separate border-spacing-2">
-              <thead>
-                <tr>
-                  <th className="pb-2"></th>
-                  {regions.map((reg) => (
-                    <th key={reg} className="pb-2 text-center w-[15%]">
-                      <span className="font-bold text-slate-700">{reg}</span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {heatmapData.map((row, i) => (
-                  <tr key={i}>
-                    <td className="py-2 pr-2 font-bold text-slate-800 whitespace-nowrap w-[25%]">{row.category}</td>
-                    {row.scores.map((score, j) => (
-                      <td key={j} className="p-0">
-                        <div className={`h-10 w-full rounded-lg flex items-center justify-center font-bold text-sm transition-all hover:scale-[1.02] ${getHeatmapColor(score)}`}>
-                          {score}
-                        </div>
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-500">
-            <span>Low Penetration</span>
-            <div className="flex gap-1">
-              <div className="w-8 h-2 rounded-full bg-slate-100"></div>
-              <div className="w-8 h-2 rounded-full bg-blue-200"></div>
-              <div className="w-8 h-2 rounded-full bg-blue-400"></div>
-              <div className="w-8 h-2 rounded-full bg-blue-600"></div>
+            <div className="text-lg font-bold text-slate-900 mb-1">5 Most Recent Videos</div>
+            <div className="text-sm font-medium text-slate-500 mb-6">
+              Views, likes, and comments per video
             </div>
-            <span>High Virality</span>
           </div>
+
+          {recentLoading && (
+            <div className="text-sm font-medium text-slate-500">Loading recent videos…</div>
+          )}
+
+          {recentError && (
+            <div className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+              {recentError}
+            </div>
+          )}
+
+          {!recentLoading && !recentError && !channel && (
+            <div className="text-sm font-medium text-slate-500">
+              Scan a video on the Video Overview page first to load this channel's videos.
+            </div>
+          )}
+
+          {!recentLoading && !recentError && channel && recentVideos.length === 0 && (
+            <div className="text-sm font-medium text-slate-500">
+              No recent videos found for this channel.
+            </div>
+          )}
+
+          {!recentLoading && !recentError && chartData.length > 0 && (
+            <div className="w-full" style={{ height: chartData.length * 80 + 60 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  layout="vertical"
+                  margin={{ top: 8, right: 24, left: 110, bottom: 8 }}
+                  barCategoryGap={18}
+                  barGap={4}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                  <XAxis
+                    type="number"
+                    tickFormatter={(v: number) => compactFmt.format(v)}
+                    tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
+                    axisLine={{ stroke: "#cbd5e1" }}
+                    tickLine={{ stroke: "#cbd5e1" }}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="videoId"
+                    width={104}
+                    interval={0}
+                    tickLine={false}
+                    axisLine={{ stroke: "#cbd5e1" }}
+                    tick={<ThumbnailTick />}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(30, 58, 138, 0.05)" }}
+                    labelFormatter={(label) => {
+                      const id = typeof label === "string" ? label : String(label);
+                      return thumbnailByVideoId.get(id)?.title ?? id;
+                    }}
+                    formatter={(value, name) => [
+                      numberFmt.format(Number(value ?? 0)),
+                      String(name ?? ""),
+                    ]}
+                    contentStyle={{
+                      background: "rgba(255,255,255,0.95)",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: 10,
+                      fontSize: 12,
+                      maxWidth: 320,
+                    }}
+                    labelStyle={{ fontWeight: 700, color: "#0f172a" }}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: 12, fontWeight: 600, color: "#475569" }}
+                  />
+                  <Bar dataKey="viewCount" name="Views" fill="#1e3a8a" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="likeCount" name="Likes" fill="#2563eb" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="commentCount" name="Comments" fill="#60a5fa" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
       </div>
