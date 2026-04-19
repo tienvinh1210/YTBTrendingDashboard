@@ -44,6 +44,17 @@ type PublishingTimesData = {
   topHours: TimeFrequency[];
 };
 
+function resolveDataHackRoot(): string | null {
+  const env = process.env.DATA_HACK_ROOT;
+  if (env && fs.existsSync(path.join(env, "output"))) {
+    return env;
+  }
+  const parent = path.resolve(process.cwd(), "..");
+  if (fs.existsSync(path.join(parent, "output"))) {
+    return parent;
+  }
+  return null;
+}
 
 function extractTimeComponents(publishTime: string) {
   const dt = new Date(publishTime);
@@ -156,7 +167,18 @@ async function parsePublishingTimes(
 
 export async function GET() {
   try {
-    const filePath = path.join(process.cwd(), "data/training/stage2_training_data.csv");
+    const dataHackRoot = resolveDataHackRoot();
+    if (!dataHackRoot) {
+      return NextResponse.json(
+        {
+          error:
+            "Could not find Data_hack directory. Set DATA_HACK_ROOT or run from YTBTrendingDashboard.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const filePath = path.join(dataHackRoot, "stage2_training_data.csv");
     if (!fs.existsSync(filePath)) {
       return NextResponse.json(
         { error: `File not found: ${filePath}` },

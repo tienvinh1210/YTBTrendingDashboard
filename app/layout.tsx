@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className="min-h-screen font-sans flex text-slate-900"
         style={{ background: 'linear-gradient(145deg, #fdfbf7 0%, #f0ede6 40%, #e2e8f0 100%)' }}

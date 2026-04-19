@@ -39,6 +39,17 @@ type RegionalData = {
   categories: CategoryPerformance[];
 };
 
+function resolveDataHackRoot(): string | null {
+  const env = process.env.DATA_HACK_ROOT;
+  if (env && fs.existsSync(path.join(env, "output"))) {
+    return env;
+  }
+  const parent = path.resolve(process.cwd(), "..");
+  if (fs.existsSync(path.join(parent, "output"))) {
+    return parent;
+  }
+  return null;
+}
 
 async function parseCategoryDistribution(
   filePath: string
@@ -82,11 +93,11 @@ async function parseCategoryDistribution(
   });
 }
 
-async function parseRegionalPerformance(): Promise<RegionalData[]> {
+async function parseRegionalPerformance(dataHackRoot: string): Promise<RegionalData[]> {
   const results: RegionalData[] = [];
 
   for (const country of COUNTRIES) {
-    const filePath = path.join(process.cwd(), `data/regional/${country}_final.csv`);
+    const filePath = path.join(dataHackRoot, `output/${country}_final.csv`);
     if (!fs.existsSync(filePath)) {
       continue;
     }
@@ -114,7 +125,18 @@ async function parseRegionalPerformance(): Promise<RegionalData[]> {
 
 export async function GET() {
   try {
-    const regions = await parseRegionalPerformance();
+    const dataHackRoot = resolveDataHackRoot();
+    if (!dataHackRoot) {
+      return NextResponse.json(
+        {
+          error:
+            "Could not find Data_hack directory. Set DATA_HACK_ROOT or run from YTBTrendingDashboard.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const regions = await parseRegionalPerformance(dataHackRoot);
     return NextResponse.json({ regions });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

@@ -36,6 +36,18 @@ type QuantilePrediction = {
   nVideos: number;
 };
 
+function resolveDataHackRoot(): string | null {
+  const env = process.env.DATA_HACK_ROOT;
+  if (env && fs.existsSync(path.join(env, "output"))) {
+    return env;
+  }
+  const parent = path.resolve(process.cwd(), "..");
+  if (fs.existsSync(path.join(parent, "output"))) {
+    return parent;
+  }
+  return null;
+}
+
 async function parseQuantilePredictions(
   filePath: string
 ): Promise<QuantilePrediction[]> {
@@ -86,9 +98,20 @@ async function parseQuantilePredictions(
 
 export async function GET() {
   try {
+    const dataHackRoot = resolveDataHackRoot();
+    if (!dataHackRoot) {
+      return NextResponse.json(
+        {
+          error:
+            "Could not find Data_hack directory. Set DATA_HACK_ROOT or run from YTBTrendingDashboard.",
+        },
+        { status: 500 }
+      );
+    }
+
     const filePath = path.join(
-      process.cwd(),
-      "data/predictions/category_quantile_predictions.csv"
+      dataHackRoot,
+      "yt_trend/out/category_quantile_predictions.csv"
     );
     if (!fs.existsSync(filePath)) {
       return NextResponse.json(
