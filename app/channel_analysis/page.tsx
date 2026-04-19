@@ -65,6 +65,129 @@ function getCountryName(code: string | null): string {
   return code;
 }
 
+type ScoreResult = {
+  score: number;
+  tier: string;
+  tierColor: string;
+};
+
+function calculateEngagementQuality(videos: RecentVideo[]): number {
+  if (videos.length === 0) return 0;
+  const totalLikes = videos.reduce((sum, v) => sum + v.likeCount, 0);
+  const totalComments = videos.reduce((sum, v) => sum + v.commentCount, 0);
+  const totalViews = videos.reduce((sum, v) => sum + v.viewCount, 0);
+  if (totalViews === 0) return 0;
+  const likeRatio = totalLikes / totalViews;
+  const commentRatio = totalComments / totalViews;
+  const combined = (likeRatio + commentRatio) * 100;
+  // Healthy engagement: 5-15% combined, penalize extremes
+  if (combined < 0.5) return 0;
+  if (combined > 20) return 40; // Suspicious
+  return Math.min(100, (combined / 15) * 100);
+}
+
+function calculateChannelEfficiency(
+  channel: ChannelInfo,
+  videos: RecentVideo[]
+): number {
+  const { subscriberCount, viewCount, videoCount } = channel;
+  if (subscriberCount === 0 || videoCount === 0) return 0;
+
+  const viewsPerSub = viewCount / Math.max(subscriberCount, 1);
+  const viewsPerVideo = viewCount / videoCount;
+  const subsPerVideo = subscriberCount / videoCount;
+
+  // Healthy: 2-20 views per subscriber, >1k views per video, >100 subs per video
+  const viewPerSubScore = Math.min(100, (viewsPerSub / 10) * 100);
+  const viewPerVideoScore = Math.min(100, (Math.log10(viewsPerVideo + 1) / 4) * 100);
+  const subsPerVideoScore = Math.min(100, (Math.log10(subsPerVideo + 1) / 3) * 100);
+
+  return (viewPerSubScore + viewPerVideoScore + subsPerVideoScore) / 3;
+}
+
+function calculateUploadConsistency(videos: RecentVideo[]): number {
+  if (videos.length < 2) return 50; // Insufficient data
+
+  const sorted = [...videos].sort(
+    (a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()
+  );
+
+  const gaps: number[] = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const daysBetween =
+      (new Date(sorted[i].publishedAt).getTime() -
+       new Date(sorted[i - 1].publishedAt).getTime()) / (1000 * 60 * 60 * 24);
+    gaps.push(daysBetween);
+  }
+
+  const avgGap = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+  const variance = gaps.reduce((sum, gap) => sum + Math.pow(gap - avgGap, 2), 0) / gaps.length;
+  const stdDev = Math.sqrt(variance);
+  const consistency = 100 - Math.min(100, (stdDev / avgGap) * 100);
+
+  // Penalty for very long gaps (>60 days = inactive)
+  if (avgGap > 60) return Math.max(20, consistency * 0.6);
+
+  return Math.max(0, consistency);
+}
+
+function calculateContentStability(videos: RecentVideo[]): number {
+  if (videos.length < 2) return 50;
+
+  const views = videos.map(v => v.viewCount);
+  const avgViews = views.reduce((a, b) => a + b, 0) / views.length;
+  const variance = views.reduce((sum, v) => sum + Math.pow(v - avgViews, 2), 0) / views.length;
+  const stdDev = Math.sqrt(variance);
+  const cv = stdDev / (avgViews || 1); // Coefficient of variation
+
+  // Stable = low CV, unstable = high CV
+  const stability = 100 - Math.min(100, cv * 100);
+
+  return Math.max(0, stability);
+}
+
+function calculateReliabilityScore(
+  channel: ChannelInfo | null,
+  videos: RecentVideo[]
+): ScoreResult {
+  if (!channel || videos.length === 0) {
+    return { score: 0, tier: "Insufficient Data", tierColor: "bg-gray-50 border-gray-200 text-gray-700" };
+  }
+
+  const engagement = calculateEngagementQuality(videos) * 0.35;
+  const efficiency = calculateChannelEfficiency(channel, videos) * 0.25;
+  const consistency = calculateUploadConsistency(videos) * 0.20;
+  const stability = calculateContentStability(videos) * 0.20;
+
+  const score = engagement + efficiency + consistency + stability;
+
+  let tier = "F";
+  let tierColor = "bg-red-50 border-red-200 text-red-700";
+
+  if (score >= 90) {
+    tier = "AAA";
+    tierColor = "bg-emerald-50 border-emerald-200 text-emerald-700";
+  } else if (score >= 75) {
+    tier = "A";
+    tierColor = "bg-green-50 border-green-200 text-green-700";
+  } else if (score >= 60) {
+    tier = "B";
+    tierColor = "bg-blue-50 border-blue-200 text-blue-700";
+  } else if (score >= 40) {
+    tier = "C";
+    tierColor = "bg-yellow-50 border-yellow-200 text-yellow-700";
+  } else if (score >= 20) {
+    tier = "D";
+    tierColor = "bg-orange-50 border-orange-200 text-orange-700";
+  }
+
+  return {
+    score: Math.round(score),
+    tier: tier === "AAA" ? `High Trust Tier — ${tier}` : `Tier ${tier}`,
+    tierColor,
+  };
+}
+
 export default function ChannelAnalysis() {
   const [channel, setChannel] = useState<ChannelInfo | null>(null);
   const [channelTitle, setChannelTitle] = useState<string | null>(null);
@@ -133,6 +256,11 @@ export default function ChannelAnalysis() {
     recentVideos.forEach((v) => m.set(v.videoId, v));
     return m;
   }, [recentVideos]);
+
+  const reliabilityScore = useMemo(
+    () => calculateReliabilityScore(channel, recentVideos),
+    [channel, recentVideos]
+  );
 
   type AxisTickProps = {
     x?: number;
@@ -242,27 +370,29 @@ export default function ChannelAnalysis() {
             {/* Donut Background */}
             <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e2e8f0" strokeWidth="12" />
-              {/* Donut Fill (92.4% -> Stroke Dashoffset calculation) */}
+              {/* Donut Fill - calculated from score */}
               <circle
                 cx="50" cy="50" r="40"
                 fill="transparent"
                 stroke="#2563eb"
                 strokeWidth="12"
                 strokeDasharray="251.2"
-                strokeDashoffset="19.1"
+                strokeDashoffset={String(251.2 * (1 - reliabilityScore.score / 100))}
                 strokeLinecap="round"
                 className="drop-shadow-sm"
               />
             </svg>
             {/* Center Text */}
             <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-4xl font-black text-slate-900 tracking-tighter">92</span>
+              <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                {reliabilityScore.score}
+              </span>
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">/ 100</span>
             </div>
           </div>
 
-          <div className="text-sm font-bold rounded-xl px-4 py-2.5 bg-blue-50 border border-blue-200 text-blue-700 w-full text-center">
-            High Trust Tier — AAA
+          <div className={`text-sm font-bold rounded-xl px-4 py-2.5 border w-full text-center ${reliabilityScore.tierColor}`}>
+            {reliabilityScore.tier}
           </div>
         </div>
 

@@ -50,6 +50,34 @@ type PipelineResult = {
   virality_hints: ViralityHint[] | null;
 };
 
+/** Gradient + glow for the trending probability bar (by risk band). */
+function viralBarStyle(riskLabel: string, percent: number): React.CSSProperties {
+  const w = Math.min(100, Math.max(0, percent));
+  let gradient: string;
+  let glow: string;
+  switch (riskLabel) {
+    case "HIGH":
+      gradient =
+        "linear-gradient(90deg, #06b6d4 0%, #6366f1 35%, #a855f7 70%, #ec4899 100%)";
+      glow = "0 0 16px rgba(99, 102, 241, 0.5)";
+      break;
+    case "MEDIUM":
+      gradient =
+        "linear-gradient(90deg, #22c55e 0%, #14b8a6 45%, #0ea5e9 100%)";
+      glow = "0 0 12px rgba(14, 165, 233, 0.4)";
+      break;
+    default:
+      gradient =
+        "linear-gradient(90deg, #94a3b8 0%, #a8b7cf 50%, #cbd5e1 100%)";
+      glow = "0 0 8px rgba(148, 163, 184, 0.3)";
+  }
+  return {
+    width: `${w}%`,
+    background: gradient,
+    boxShadow: glow,
+  };
+}
+
 const numberFmt = new Intl.NumberFormat("en-US");
 const dateFmt = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
@@ -314,18 +342,21 @@ function VideoOverviewContent() {
         }
 
         .vo-track {
-          height: 5px;
+          height: 8px;
           border-radius: 99px;
-          background: #f1f5f9;
+          background: linear-gradient(180deg, #e8eef5 0%, #f1f5f9 100%);
           overflow: hidden;
+          box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
         }
 
         .vo-fill {
           height: 100%;
           border-radius: 99px;
-          background: #1e3a8a; /* Primary Navy Blue */
-          width: 88%;
-          transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          min-width: 0;
+          transition:
+            width 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.35s ease,
+            filter 0.35s ease;
         }
 
         /* Days Card */
@@ -463,7 +494,6 @@ function VideoOverviewContent() {
               {/* Trending Prediction (Stage 1) */}
               <div className="vo-card">
                 <p className="vo-card-title">Trending Prediction</p>
-                <p className="vo-card-sub">Stage 1 model — probability of trending (leak-free features)</p>
                 {pipeline ? (
                   <>
                     <div className="vo-prob-row">
@@ -473,13 +503,16 @@ function VideoOverviewContent() {
                     <div className="vo-track">
                       <div
                         className="vo-fill"
-                        style={{ width: `${Math.min(100, Math.max(0, pipeline.stage1.probability_percent))}%` }}
+                        style={viralBarStyle(
+                          pipeline.stage1.risk_label,
+                          pipeline.stage1.probability_percent
+                        )}
                       />
                     </div>
                     <p style={{ fontSize: 12, color: "#64748b", marginTop: 14, marginBottom: 0 }}>
                       {pipeline.stage1.predicted_trendy
-                        ? "Model predicts this asset is likely to trend."
-                        : "Model predicts not trending — see post-trend outlook and levers below."}
+                        ? "Likely to trend — see post-trend outlook alongside."
+                        : "Lower trending score — see levers below."}
                     </p>
                   </>
                 ) : (
@@ -491,18 +524,16 @@ function VideoOverviewContent() {
                 )}
               </div>
 
-              {/* Stage 2 or momentum placeholder */}
               <div className="vo-card vo-reveal vo-reveal-3">
-                {pipeline && !pipeline.stage1.predicted_trendy && pipeline.stage2 ? (
+                {pipeline && pipeline.stage1.predicted_trendy && pipeline.stage2 ? (
                   <>
                     <p className="vo-card-title">Post-trend outlook</p>
-                    <p className="vo-card-sub">Stage 2 — sustained views/day after trending ends</p>
                     <div className="vo-days-number" style={{ fontSize: 22, lineHeight: 1.3, fontWeight: 600 }}>
                       {pipeline.stage2.vpd_class_label}
                     </div>
                     <span className="vo-days-unit">
-                      Confidence {Math.round(pipeline.stage2.predicted_class_confidence * 100)}% · Classes
-                      fading / steady / thriving
+                      Confidence {Math.round(pipeline.stage2.predicted_class_confidence * 100)}% · fading /
+                      steady / thriving
                     </span>
                     <div className="vo-peak-row" style={{ flexWrap: "wrap", gap: 8 }}>
                       {pipeline.stage2.class_probabilities.map((p, i) => (
@@ -522,19 +553,9 @@ function VideoOverviewContent() {
                       ))}
                     </div>
                   </>
-                ) : pipeline && pipeline.stage1.predicted_trendy ? (
-                  <>
-                    <p className="vo-card-title">Momentum</p>
-                    <p className="vo-card-sub">Strong trending signal — post-trend model skipped</p>
-                    <div className="vo-days-number" style={{ fontSize: 36 }}>
-                      {pipeline.stage1.probability_percent}%
-                    </div>
-                    <span className="vo-days-unit">Stage 2 runs only when Stage 1 is negative.</span>
-                  </>
                 ) : (
                   <>
                     <p className="vo-card-title">Post-trend outlook</p>
-                    <p className="vo-card-sub">Stage 2 runs when Stage 1 predicts not trending</p>
                     <p style={{ fontSize: 13, color: "#64748b", marginTop: 8 }}>—</p>
                   </>
                 )}
@@ -556,7 +577,7 @@ function VideoOverviewContent() {
                   Virality levers (top signals)
                 </p>
                 <p className="vo-card-sub" style={{ marginBottom: 18 }}>
-                  Global drivers from the Stage 1 model when the asset is not predicted to trend
+                  Strongest global signals from the trending model
                 </p>
                 <ol style={{ margin: 0, paddingLeft: 18, color: "#334155", fontSize: 13, lineHeight: 1.55 }}>
                   {pipeline.virality_hints.map((h) => (
