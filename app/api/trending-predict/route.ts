@@ -43,19 +43,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing video object" }, { status: 400 });
   }
 
+  if (!body.channel) {
+    return NextResponse.json(
+      { error: "Prediction unavailable: Channel data required. Try another video or check the YouTube API key." },
+      { status: 400 }
+    );
+  }
+
   const payload = {
     video: body.video,
-    channel: body.channel ?? undefined,
+    channel: body.channel,
   };
 
   const py = process.env.PYTHON_PATH || "python";
   const script = path.join(scriptDir, "run_predict_pipeline.py");
+  console.log("[trending-predict] Running script:", script);
+  console.log("[trending-predict] With payload:", JSON.stringify(payload).slice(0, 200));
 
-  const stdout = await new Promise<string>((resolve, reject) => {
+  const { stdout, stderr, code } = await new Promise<{ stdout: string; stderr: string; code: number }>((resolve) => {
     const child = spawn(py, [script], {
       cwd: scriptDir,
       stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env, PYTHONUTF8: "1" },
+      env: { ...process.env, PYTHONUTF8: "1", PYTHONUNBUFFERED: "1" },
     });
     let out = "";
     let err = "";
@@ -65,24 +74,39 @@ export async function POST(req: Request) {
     child.stderr?.on("data", (c: Buffer) => {
       err += c.toString("utf8");
     });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(err || `Python exited with code ${code}`));
-        return;
-      }
-      resolve(out);
+    child.on("close", (exitCode) => {
+      resolve({ stdout: out, stderr: err, code: exitCode || 0 });
+    });
+    child.on("error", (e) => {
+      resolve({ stdout: "", stderr: e.message, code: 1 });
     });
     child.stdin?.write(JSON.stringify(payload), "utf8");
     child.stdin?.end();
-  }).catch((e: Error) => {
-    throw e;
   });
+
+  if (code !== 0) {
+    console.error("[trending-predict] Exit code:", code);
+    console.error("[trending-predict] Stderr:", stderr);
+    console.error("[trending-predict] Stdout:", stdout);
+    return NextResponse.json(
+      { error: "Prediction failed", detail: (stderr || stdout).slice(0, 500) },
+      { status: 502 }
+    );
+  }
+
+  if (!stdout.trim()) {
+    console.error("[trending-predict] No output from Python script");
+    return NextResponse.json(
+      { error: "Prediction unavailable: No output from model" },
+      { status: 502 }
+    );
+  }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(stdout.trim());
   } catch {
+    console.error("[trending-predict] JSON parse error:", stdout.slice(0, 200));
     return NextResponse.json(
       { error: "Invalid JSON from predictor", detail: stdout.slice(0, 500) },
       { status: 502 }
