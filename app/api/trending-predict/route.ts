@@ -7,18 +7,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-function resolveRepoRoot(): string | null {
-  const env = process.env.DATA_HACK_ROOT;
-  if (env && fs.existsSync(path.join(env, "run_predict_pipeline.py"))) {
-    return env;
-  }
-  const fromCwd = path.join(process.cwd(), "run_predict_pipeline.py");
-  if (fs.existsSync(fromCwd)) {
-    return process.cwd();
-  }
-  const parent = path.join(process.cwd(), "..");
-  if (fs.existsSync(path.join(parent, "run_predict_pipeline.py"))) {
-    return path.resolve(parent);
+function resolveScriptDir(): string | null {
+  const scriptPath = path.join(process.cwd(), "scripts");
+  if (fs.existsSync(path.join(scriptPath, "run_predict_pipeline.py"))) {
+    return scriptPath;
   }
   return null;
 }
@@ -29,12 +21,12 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-  const repoRoot = resolveRepoRoot();
-  if (!repoRoot) {
+  const scriptDir = resolveScriptDir();
+  if (!scriptDir) {
     return NextResponse.json(
       {
         error:
-          "Could not find Data_hack repo (run_predict_pipeline.py). Set DATA_HACK_ROOT or run Next from YTBTrendingDashboard.",
+          "Could not find scripts directory with run_predict_pipeline.py. Ensure the project is properly set up.",
       },
       { status: 500 }
     );
@@ -57,11 +49,11 @@ export async function POST(req: Request) {
   };
 
   const py = process.env.PYTHON_PATH || "python";
-  const script = path.join(repoRoot, "run_predict_pipeline.py");
+  const script = path.join(scriptDir, "run_predict_pipeline.py");
 
   const stdout = await new Promise<string>((resolve, reject) => {
     const child = spawn(py, [script], {
-      cwd: repoRoot,
+      cwd: scriptDir,
       stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env, PYTHONUTF8: "1" },
     });
