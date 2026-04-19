@@ -2,15 +2,25 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
-  Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
+
+type TooltipPayloadEntry = {
+  value?: number | string;
+  name?: string;
+  stroke?: string;
+  payload?: RecentVideo;
+};
+type TooltipRenderProps = {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+};
 
 type ChannelInfo = {
   id: string;
@@ -43,6 +53,22 @@ const compactFmt = new Intl.NumberFormat("en-US", {
   notation: "compact",
   maximumFractionDigits: 1,
 });
+const shortDateFmt = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+});
+
+const CHART_LEFT = 50;
+const CHART_RIGHT = 16;
+const THUMB_W = 96;
+const THUMB_H = 54;
+const X_PADDING = THUMB_W / 2;
+
+const METRICS = [
+  { key: "viewCount", name: "Views", color: "#1e3a8a" },
+  { key: "likeCount", name: "Likes", color: "#2563eb" },
+  { key: "commentCount", name: "Comments", color: "#60a5fa" },
+] as const;
 
 let regionNames: Intl.DisplayNames | null = null;
 function getCountryName(code: string | null): string {
@@ -120,37 +146,35 @@ export default function ChannelAnalysis() {
   const countryCode = channel?.country ?? null;
   const countryDisplay = getCountryName(countryCode);
 
-  // Reverse so the most recent video sits at the top of the chart.
-  const chartData = useMemo(() => [...recentVideos].reverse(), [recentVideos]);
-  const thumbnailByVideoId = useMemo(() => {
-    const m = new Map<string, RecentVideo>();
-    recentVideos.forEach((v) => m.set(v.videoId, v));
-    return m;
-  }, [recentVideos]);
+  // Sort chronologically (oldest left → newest right) for time-series charts.
+  const chartData = useMemo(
+    () =>
+      [...recentVideos].sort(
+        (a, b) =>
+          new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()
+      ),
+    [recentVideos]
+  );
 
-  type AxisTickProps = {
-    x?: number;
-    y?: number;
-    payload?: { value: string };
-  };
-  const ThumbnailTick = (props: AxisTickProps) => {
-    const { x = 0, y = 0, payload } = props;
-    const v = payload ? thumbnailByVideoId.get(payload.value) : undefined;
-    if (!v) return null;
-    const w = 96;
-    const h = 54;
+  const ChartTooltip = (props: TooltipRenderProps) => {
+    const { active, payload } = props;
+    if (!active || !payload || payload.length === 0) return null;
+    const p = payload[0];
+    const datum = p.payload;
+    if (!datum) return null;
     return (
-      <g transform={`translate(${x - w - 8}, ${y - h / 2})`}>
-        <a href={v.url} target="_blank" rel="noopener noreferrer">
-          <image
-            href={v.thumbnailUrl}
-            width={w}
-            height={h}
-            preserveAspectRatio="xMidYMid slice"
-            style={{ borderRadius: 6 }}
-          />
-        </a>
-      </g>
+      <div className="bg-white/95 border border-slate-200 rounded-lg p-2.5 shadow-md text-xs max-w-[280px]">
+        <div className="font-bold text-slate-900 mb-1 line-clamp-2">{datum.title}</div>
+        <div className="text-slate-700">
+          <span className="font-semibold" style={{ color: p.stroke }}>
+            {p.name}
+          </span>
+          <span>: {numberFmt.format(Number(p.value ?? 0))}</span>
+        </div>
+        <div className="text-slate-400 text-[10px] mt-1">
+          {shortDateFmt.format(new Date(datum.publishedAt))}
+        </div>
+      </div>
     );
   };
 
@@ -266,59 +290,96 @@ export default function ChannelAnalysis() {
           )}
 
           {!recentLoading && !recentError && chartData.length > 0 && (
-            <div className="w-full" style={{ height: chartData.length * 80 + 60 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  layout="vertical"
-                  margin={{ top: 8, right: 24, left: 110, bottom: 8 }}
-                  barCategoryGap={18}
-                  barGap={4}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                  <XAxis
-                    type="number"
-                    tickFormatter={(v: number) => compactFmt.format(v)}
-                    tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
-                    axisLine={{ stroke: "#cbd5e1" }}
-                    tickLine={{ stroke: "#cbd5e1" }}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="videoId"
-                    width={104}
-                    interval={0}
-                    tickLine={false}
-                    axisLine={{ stroke: "#cbd5e1" }}
-                    tick={<ThumbnailTick />}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "rgba(30, 58, 138, 0.05)" }}
-                    labelFormatter={(label) => {
-                      const id = typeof label === "string" ? label : String(label);
-                      return thumbnailByVideoId.get(id)?.title ?? id;
-                    }}
-                    formatter={(value, name) => [
-                      numberFmt.format(Number(value ?? 0)),
-                      String(name ?? ""),
-                    ]}
-                    contentStyle={{
-                      background: "rgba(255,255,255,0.95)",
-                      border: "1px solid #cbd5e1",
-                      borderRadius: 10,
-                      fontSize: 12,
-                      maxWidth: 320,
-                    }}
-                    labelStyle={{ fontWeight: 700, color: "#0f172a" }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: 12, fontWeight: 600, color: "#475569" }}
-                  />
-                  <Bar dataKey="viewCount" name="Views" fill="#1e3a8a" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="likeCount" name="Likes" fill="#2563eb" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="commentCount" name="Comments" fill="#60a5fa" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="space-y-4">
+              {METRICS.map((cfg) => (
+                <div key={cfg.key}>
+                  <div
+                    className="text-xs font-bold tracking-wider uppercase mb-1"
+                    style={{ color: cfg.color, marginLeft: CHART_LEFT }}
+                  >
+                    {cfg.name}
+                  </div>
+                  <div style={{ width: "100%", height: 130 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={chartData}
+                        margin={{
+                          top: 6,
+                          right: CHART_RIGHT,
+                          left: 0,
+                          bottom: 0,
+                        }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="#e2e8f0"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="videoId"
+                          tick={false}
+                          axisLine={{ stroke: "#cbd5e1" }}
+                          tickLine={false}
+                          padding={{ left: X_PADDING, right: X_PADDING }}
+                        />
+                        <YAxis
+                          width={CHART_LEFT}
+                          tickFormatter={(v: number) => compactFmt.format(v)}
+                          tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          content={<ChartTooltip />}
+                          cursor={{ stroke: "#cbd5e1", strokeDasharray: "3 3" }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey={cfg.key}
+                          name={cfg.name}
+                          stroke={cfg.color}
+                          strokeWidth={2.5}
+                          dot={{ r: 4, strokeWidth: 2, fill: "#fff", stroke: cfg.color }}
+                          activeDot={{ r: 6 }}
+                          isAnimationActive={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              ))}
+
+              {/* Thumbnail row aligned with chart x positions */}
+              <div
+                className="flex justify-between pt-2"
+                style={{ paddingLeft: CHART_LEFT, paddingRight: CHART_RIGHT }}
+              >
+                {chartData.map((v) => (
+                  <a
+                    key={v.videoId}
+                    href={v.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex flex-col items-center gap-1.5"
+                    style={{ width: THUMB_W }}
+                    title={v.title}
+                  >
+                    <img
+                      src={v.thumbnailUrl}
+                      alt={v.title}
+                      className="rounded-md border border-slate-200 group-hover:border-blue-500 shadow-sm transition-colors"
+                      style={{
+                        width: THUMB_W,
+                        height: THUMB_H,
+                        objectFit: "cover",
+                      }}
+                    />
+                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-blue-700 transition-colors">
+                      {shortDateFmt.format(new Date(v.publishedAt))}
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </div>
