@@ -7,9 +7,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-/** Hosted Python predictor (required on Vercel — Node lambdas have no Python). */
-const PREDICTION_API_URL = process.env.PREDICTION_API_URL?.trim();
-
 /** Walk up from `startDir` looking for `scripts/run_predict_pipeline.py` (handles odd `cwd`). */
 function findScriptsDirFromWalk(startDir: string, maxDepth = 10): string | null {
   let cur = path.resolve(startDir);
@@ -124,53 +121,20 @@ function runPredictor(
   });
 }
 
-async function proxyToPythonService(
-  upstreamUrl: string,
-  payload: { video: Record<string, unknown>; channel: Record<string, unknown> }
-) {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const key = process.env.PREDICTION_API_KEY?.trim();
-  if (key) {
-    headers.Authorization = `Bearer ${key}`;
-  }
-
-  const res = await fetch(upstreamUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(115_000),
-  });
-
-  const text = await res.text();
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
+export async function POST(req: Request) {
+  const scriptDir = resolveScriptDir();
+  if (!scriptDir) {
     return NextResponse.json(
       {
-        error: "Prediction upstream returned non-JSON",
-        detail: text.slice(0, 400),
-        hint: `Check ${upstreamUrl} returns the same JSON shape as local predict_trending_pipeline().`,
+        error: "Could not find scripts/run_predict_pipeline.py.",
+        hint:
+          "Run `npm run dev` from the YTBTrendingDashboard folder, or set DASHBOARD_ROOT to that folder. cwd was: " +
+          process.cwd(),
       },
-      { status: 502 }
+      { status: 500 }
     );
   }
 
-  if (!res.ok && parsed && typeof parsed === "object" && "error" in parsed) {
-    return NextResponse.json(parsed, { status: res.status });
-  }
-  if (!res.ok) {
-    return NextResponse.json(
-      { error: "Prediction upstream error", detail: text.slice(0, 400) },
-      { status: res.status }
-    );
-  }
-  return NextResponse.json(parsed);
-}
-
-export async function POST(req: Request) {
   let body: Body;
   try {
     body = (await req.json()) as Body;
@@ -195,38 +159,7 @@ export async function POST(req: Request) {
           videoCount: 0,
         };
 
-  const payload = {
-    video: body.video as Record<string, unknown>,
-    channel: channel as Record<string, unknown>,
-  };
-
-  if (PREDICTION_API_URL) {
-    return proxyToPythonService(PREDICTION_API_URL, payload);
-  }
-
-  if (process.env.VERCEL === "1" && process.env.ALLOW_VERCEL_LOCAL_PYTHON !== "1") {
-    return NextResponse.json(
-      {
-        error:
-          "Predictions need a Python runtime. Vercel Node functions do not include Python on PATH.",
-        hint: "Deploy the predictor separately (Railway, Render, Fly.io, etc.) and set PREDICTION_API_URL in Vercel to that service’s POST URL (same JSON body as /api/trending-predict). Optional: PREDICTION_API_KEY for Authorization: Bearer. See SETUP.md § Vercel.",
-      },
-      { status: 503 }
-    );
-  }
-
-  const scriptDir = resolveScriptDir();
-  if (!scriptDir) {
-    return NextResponse.json(
-      {
-        error: "Could not find scripts/run_predict_pipeline.py.",
-        hint:
-          "Run `npm run dev` from the YTBTrendingDashboard folder, or set DASHBOARD_ROOT to that folder. cwd was: " +
-          process.cwd(),
-      },
-      { status: 500 }
-    );
-  }
+  const payload = { video: body.video, channel };
 
   const script = path.join(scriptDir, "run_predict_pipeline.py");
   const mlDir = path.join(scriptDir, "..", "ml");
