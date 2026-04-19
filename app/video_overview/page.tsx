@@ -50,6 +50,15 @@ type PipelineResult = {
   virality_hints: ViralityHint[] | null;
 };
 
+// Map raw backend feature keys to consistent, professional Title Case format
+const FEATURE_TITLE_MAP: Record<string, string> = {
+  publish_dayofweek: "Audience Availability By Day",
+  cat_trend_spread: "Category Trend Volatility",
+  cat_trend_p50: "Typical Trend Dynamics",
+  cat_trend_p90: "Slow-Trend Potential",
+  channel_videos: "Channel Catalog Size",
+};
+
 /** Gradient + glow for the trending probability bar (by risk band). */
 function viralBarStyle(riskLabel: string, percent: number): React.CSSProperties {
   const w = Math.min(100, Math.max(0, percent));
@@ -176,6 +185,11 @@ function VideoOverviewContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  // Calculate maximum importance to scale the bar chart properly
+  const maxImportance = pipeline?.virality_hints
+    ? Math.max(...pipeline.virality_hints.map((h) => h.importance), 0.01)
+    : 1;
+
   return (
     <>
       <style>{`
@@ -219,16 +233,6 @@ function VideoOverviewContent() {
           color: #64748b;
           font-weight: 400;
           margin: 0;
-        }
-
-        .vo-badge {
-          font-family: 'DM Mono', monospace;
-          font-size: 11px;
-          padding: 5px 10px;
-          border-radius: 4px;
-          background: #e2e8f0;
-          color: #475569;
-          letter-spacing: 0.05em;
         }
 
         /* Input Row */
@@ -404,25 +408,64 @@ function VideoOverviewContent() {
           border-top: 1px solid #f1f5f9;
         }
 
-        .vo-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: #1e3a8a; /* Primary Navy Blue */
-          flex-shrink: 0;
+        /* Levers Chart */
+        .vo-lever-list {
+          display: flex;
+          flex-direction: column;
+          gap: 24px; /* Increased gap to accommodate larger bars */
         }
 
-        .vo-peak-label {
+        .vo-lever-item {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .vo-lever-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+        }
+
+        .vo-lever-name {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          color: #0f172a;
+        }
+
+        .vo-lever-var {
+          font-family: 'DM Mono', monospace;
           font-size: 12px;
+          font-weight: 400;
+          color: #64748b;
+          margin-left: 6px;
+        }
+
+        .vo-lever-weight {
+          font-family: 'DM Mono', monospace;
+          font-size: 11px;
           color: #64748b;
         }
 
-        .vo-peak-date {
-          font-family: 'DM Mono', monospace;
-          font-size: 12px;
-          color: #0f172a;
-          font-weight: 500;
-          margin-left: auto;
+        .vo-lever-track {
+          height: 12px; /* Increased height for thicker bars */
+          border-radius: 6px;
+          background: #e2e8f0;
+          overflow: hidden;
+        }
+
+        .vo-lever-fill {
+          height: 100%;
+          background: #1e3a8a; /* Navy */
+          border-radius: 6px;
+          transition: width 0.6s ease;
+        }
+
+        .vo-lever-desc {
+          font-size: 13px;
+          color: #475569;
+          line-height: 1.4;
         }
 
         /* Fade-in */
@@ -581,6 +624,7 @@ function VideoOverviewContent() {
               </div>
             </div>
 
+            {/* Virality Levers Chart */}
             {pipeline && pipeline.virality_hints && pipeline.virality_hints.length > 0 && (
               <div
                 className="vo-reveal vo-reveal-3"
@@ -589,26 +633,40 @@ function VideoOverviewContent() {
                   background: "#fff",
                   border: "1px solid #cbd5e1",
                   borderRadius: 12,
-                  padding: "22px 26px",
+                  padding: "26px",
                 }}
               >
                 <p className="vo-card-title" style={{ marginBottom: 4 }}>
-                  Virality levers (top signals)
+                  Virality levers (Top signals)
                 </p>
-                <p className="vo-card-sub" style={{ marginBottom: 18 }}>
+                <p className="vo-card-sub" style={{ marginBottom: 24 }}>
                   Strongest global signals from the trending model
                 </p>
-                <ol style={{ margin: 0, paddingLeft: 18, color: "#334155", fontSize: 13, lineHeight: 1.55 }}>
-                  {pipeline.virality_hints.map((h) => (
-                    <li key={h.feature} style={{ marginBottom: 10 }}>
-                      <strong style={{ fontFamily: "DM Mono, monospace", fontSize: 12 }}>{h.feature}</strong>
-                      <span style={{ color: "#94a3b8", marginLeft: 8 }}>
-                        (weight {h.importance.toFixed(4)})
-                      </span>
-                      <div style={{ color: "#64748b", marginTop: 4 }}>{h.hint}</div>
-                    </li>
-                  ))}
-                </ol>
+
+                <div className="vo-lever-list">
+                  {pipeline.virality_hints.map((h) => {
+                    // Calculate relative width based on the highest importance value
+                    const fillWidth = `${(h.importance / maxImportance) * 100}%`;
+
+                    const titleText = FEATURE_TITLE_MAP[h.feature] || h.feature;
+
+                    return (
+                      <div key={h.feature} className="vo-lever-item">
+                        <div className="vo-lever-header">
+                          <span className="vo-lever-name">
+                            {titleText}
+                            <span className="vo-lever-var">({h.feature})</span>
+                          </span>
+                          <span className="vo-lever-weight">weight {h.importance.toFixed(4)}</span>
+                        </div>
+                        <div className="vo-lever-track">
+                          <div className="vo-lever-fill" style={{ width: fillWidth }} />
+                        </div>
+                        <div className="vo-lever-desc">{h.hint}</div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </>
