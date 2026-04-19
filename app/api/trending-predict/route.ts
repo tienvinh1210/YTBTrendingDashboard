@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     channel: body.channel,
   };
 
-  const py = process.env.PYTHON_PATH || "python";
+  const py = process.env.PYTHON_PATH || "python3";
   const script = path.join(scriptDir, "run_predict_pipeline.py");
   console.log("[trending-predict] Running script:", script);
   console.log("[trending-predict] With payload:", JSON.stringify(payload).slice(0, 200));
