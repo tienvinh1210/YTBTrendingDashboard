@@ -115,7 +115,7 @@ export default function PortfolioRecommendation() {
       <div className="bg-white/70 backdrop-blur-md border border-slate-300 shadow-sm rounded-2xl p-6">
         <div className="flex items-baseline justify-between mb-4">
           <div className="text-xs font-bold tracking-wider text-slate-500 uppercase">
-            Top 5 Similar Videos
+            Top 5 most popular similar videos
           </div>
           {scan?.video?.categoryName && scan?.channel?.country && (
             <div className="text-xs font-semibold text-slate-500">
