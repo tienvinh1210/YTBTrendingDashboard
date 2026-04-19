@@ -1,0 +1,22 @@
+"""Read JSON from stdin (video + channel payload), print predict_trending_pipeline result as JSON."""
+from __future__ import annotations
+
+import json
+import sys
+
+# Ensure repo root is on path when run as script
+if __name__ == "__main__":
+    try:
+        payload = json.load(sys.stdin)
+    except json.JSONDecodeError as e:
+        print(json.dumps({"error": f"Invalid JSON: {e}"}))
+        sys.exit(1)
+
+    try:
+        from stage_1_xg_boost import predict_trending_pipeline
+
+        out = predict_trending_pipeline(payload)
+        print(json.dumps(out))
+    except Exception as e:
+        print(json.dumps({"error": str(e)}))
+        sys.exit(1)

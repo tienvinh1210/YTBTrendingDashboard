@@ -1,6 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  Cell, ComposedChart, ScatterChart, Scatter,
+} from 'recharts';
 
 type RecommendedVideo = {
   videoId: string;
@@ -23,6 +27,44 @@ type StoredScan = {
   } | null;
 };
 
+type QuantilePrediction = {
+  id: number;
+  name: string;
+  p10: number;
+  p50: number;
+  p90: number;
+  empP10: number;
+  empP50: number;
+  empP90: number;
+  nVideos: number;
+};
+
+type TimeFrequency = {
+  value: number | string;
+  label: string;
+  count: number;
+};
+
+type PublishingTimesData = {
+  categoryId: number;
+  categoryName: string;
+  topMonths: TimeFrequency[];
+  topDays: TimeFrequency[];
+  topHours: TimeFrequency[];
+};
+
+type CategoryPerformance = {
+  categoryId: number;
+  categoryName: string;
+  share: number;
+  count: number;
+};
+
+type RegionalData = {
+  countryCode: string;
+  categories: CategoryPerformance[];
+};
+
 const STORAGE_KEY = "yourisk:lastScan";
 
 export default function PortfolioRecommendation() {
@@ -31,6 +73,21 @@ export default function PortfolioRecommendation() {
   const [recsLoading, setRecsLoading] = useState(false);
   const [recsError, setRecsError] = useState<string | null>(null);
   const [scanLoaded, setScanLoaded] = useState(false);
+
+  // Quantile data
+  const [quantiles, setQuantiles] = useState<QuantilePrediction[]>([]);
+  const [quantilesLoading, setQuantilesLoading] = useState(false);
+  const [quantilesError, setQuantilesError] = useState<string | null>(null);
+
+  // Publishing times data
+  const [publishingTimes, setPublishingTimes] = useState<PublishingTimesData[]>([]);
+  const [timesLoading, setTimesLoading] = useState(false);
+  const [timesError, setTimesError] = useState<string | null>(null);
+
+  // Regional data
+  const [regions, setRegions] = useState<RegionalData[]>([]);
+  const [regionsLoading, setRegionsLoading] = useState(false);
+  const [regionsError, setRegionsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -44,6 +101,7 @@ export default function PortfolioRecommendation() {
     }
   }, []);
 
+  // Fetch recommendations
   useEffect(() => {
     if (!scan) return;
     const categoryId = scan.video?.categoryId;
@@ -86,29 +144,80 @@ export default function PortfolioRecommendation() {
     return () => controller.abort();
   }, [scan]);
 
-  const categoryAllocations = [
-    { label: 'Tech Reviews', percentage: 40, color: 'bg-blue-900' },
-    { label: 'How-to / Tutorials', percentage: 30, color: 'bg-blue-600' },
-    { label: 'Entertainment', percentage: 20, color: 'bg-indigo-400' },
-    { label: 'Gaming', percentage: 10, color: 'bg-slate-400' },
-  ];
+  // Fetch quantile predictions
+  useEffect(() => {
+    const controller = new AbortController();
+    setQuantilesLoading(true);
 
-  const creators = [
-    { name: 'MKBHD', category: 'Tech Reviews', countryCode: 'us', country: 'US', risk: 'Low', ltv: '$2.4M', allocation: '25%' },
-    { name: 'Dave2D', category: 'Tech Reviews', countryCode: 'us', country: 'US', risk: 'Low', ltv: '$1.8M', allocation: '15%' },
-    { name: 'Linus Tech', category: 'How-to', countryCode: 'ca', country: 'CA', risk: 'Medium', ltv: '$2.1M', allocation: '20%' },
-    { name: 'iJustine', category: 'Entertainment', countryCode: 'us', country: 'US', risk: 'Low', ltv: '$1.2M', allocation: '15%' },
-    { name: 'MrMobile', category: 'Tech Reviews', countryCode: 'gb', country: 'GB', risk: 'Medium', ltv: '$0.9M', allocation: '10%' },
-    { name: 'GadgetsBoy', category: 'How-to', countryCode: 'gb', country: 'GB', risk: 'Medium', ltv: '$0.8M', allocation: '10%' },
-  ];
+    fetch(`/api/portfolio/quantile-predictions`, { signal: controller.signal })
+      .then(async (res) => {
+        const data = (await res.json()) as any;
+        if (!res.ok) throw new Error(data.error || "Failed to load quantile predictions");
+        setQuantiles(data.categories || []);
+      })
+      .catch((e: unknown) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setQuantilesError(e instanceof Error ? e.message : "Unexpected error");
+      })
+      .finally(() => setQuantilesLoading(false));
+
+    return () => controller.abort();
+  }, []);
+
+  // Fetch publishing times
+  useEffect(() => {
+    const controller = new AbortController();
+    setTimesLoading(true);
+
+    fetch(`/api/portfolio/publishing-times`, { signal: controller.signal })
+      .then(async (res) => {
+        const data = (await res.json()) as any;
+        if (!res.ok) throw new Error(data.error || "Failed to load publishing times");
+        setPublishingTimes(data.categories || []);
+      })
+      .catch((e: unknown) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setTimesError(e instanceof Error ? e.message : "Unexpected error");
+      })
+      .finally(() => setTimesLoading(false));
+
+    return () => controller.abort();
+  }, []);
+
+  // Fetch regional performance
+  useEffect(() => {
+    const controller = new AbortController();
+    setRegionsLoading(true);
+
+    fetch(`/api/portfolio/regional-performance`, { signal: controller.signal })
+      .then(async (res) => {
+        const data = (await res.json()) as any;
+        if (!res.ok) throw new Error(data.error || "Failed to load regional performance");
+        setRegions(data.regions || []);
+      })
+      .catch((e: unknown) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setRegionsError(e instanceof Error ? e.message : "Unexpected error");
+      })
+      .finally(() => setRegionsLoading(false));
+
+    return () => controller.abort();
+  }, []);
+
+  const currentCategoryId = scan?.video?.categoryId
+    ? parseInt(scan.video.categoryId, 10)
+    : null;
+  const currentPublishingTimes = currentCategoryId
+    ? publishingTimes.find((p) => p.categoryId === currentCategoryId)
+    : null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">Industry Portfolio Recommendation</h1>
-        <p className="text-sm font-medium mt-2 text-slate-600">Configure and analyze creator mix diversification.</p>
+        <h1 className="text-3xl font-black tracking-tight text-slate-900">Portfolio Insights</h1>
+        <p className="text-sm font-medium mt-2 text-slate-600">Trending predictions, publishing strategy, and regional performance.</p>
       </div>
 
       {/* Top 5 Similar Videos */}
@@ -165,115 +274,176 @@ export default function PortfolioRecommendation() {
         )}
       </div>
 
-      {/* 2-Column Section */}
-      <div className="grid grid-cols-2 gap-6">
-        {/* Category Allocation */}
-        <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6">
-          <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-6">Category Allocation</div>
-          <div className="space-y-5">
-            {categoryAllocations.map((item, i) => (
-              <div key={i}>
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-sm font-bold text-slate-900">{item.label}</span>
-                  <span className="text-xs font-bold text-slate-500">{item.percentage}%</span>
-                </div>
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
-                  <div className={`${item.color} h-full rounded-full`} style={{ width: `${item.percentage}%` }}></div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Days to Trend Confidence Interval */}
+      <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6">
+        <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-2">
+          Days to Trend Confidence Interval
         </div>
+        <p className="text-xs text-slate-600 mb-4">
+          Predicted days to trend (P10/P50/P90) per category. Coverage: 80.8% · Model R²: 0.878
+        </p>
 
-        {/* Diversification Score */}
-        <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6">
-          <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-5">Diversification Score</div>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-blue-50/50 rounded-xl p-4 flex flex-col items-center justify-center border border-blue-100">
-              <div className="text-4xl font-black text-blue-900 mb-1">84</div>
-              <div className="text-xs font-bold tracking-wide text-blue-700 uppercase">Overall score</div>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-4 flex flex-col items-center justify-center border border-slate-200">
-              <div className="text-4xl font-black text-slate-800 mb-1">6</div>
-              <div className="text-xs font-bold tracking-wide text-slate-500 uppercase">Creators in mix</div>
-            </div>
+        {quantilesError && (
+          <div className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+            {quantilesError}
           </div>
+        )}
 
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-sm font-bold text-slate-900">Category spread</span>
-                <span className="text-xs font-bold text-blue-700">4 categories</span>
-              </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
-                <div className="bg-gradient-to-r from-blue-900 to-blue-700 h-full w-[85%] rounded-full"></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-sm font-bold text-slate-900">Country spread</span>
-                <span className="text-xs font-bold text-blue-700">3 markets</span>
-              </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
-                <div className="bg-gradient-to-r from-blue-900 to-blue-700 h-full w-[75%] rounded-full"></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-sm font-bold text-slate-900">Risk tier spread</span>
-                <span className="text-xs font-bold text-slate-500">Mixed</span>
-              </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden shadow-inner">
-                <div className="bg-slate-400 h-full w-[60%] rounded-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {quantilesLoading && (
+          <div className="text-sm font-medium text-slate-500">Loading predictions…</div>
+        )}
+
+        {!quantilesLoading && !quantilesError && quantiles.length > 0 && (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={quantiles}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="p10" fill="#1e3a8a" name="P10 (fast)" />
+              <Bar dataKey="p50" fill="#3b82f6" name="P50 (median)" />
+              <Bar dataKey="p90" fill="#cbd5e1" name="P90 (slow)" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
-      {/* Recommended Creator Mix */}
-      <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6 overflow-hidden">
-        <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-5">Recommended Creator Mix</div>
-        <div className="w-full overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="text-slate-500 border-b-2 border-slate-100">
-                <th className="pb-3 font-bold w-1/4">Creator</th>
-                <th className="pb-3 font-bold w-1/5">Category</th>
-                <th className="pb-3 font-bold w-1/6">Market</th>
-                <th className="pb-3 font-bold w-1/6">Risk</th>
-                <th className="pb-3 font-bold w-1/6">LTV Est.</th>
-                <th className="pb-3 font-bold text-right w-[10%]">Allocation</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {creators.map((creator, i) => (
-                <tr key={i} className="text-slate-700 transition-colors hover:bg-slate-50/50">
-                  <td className="py-4 font-black text-slate-900">{creator.name}</td>
-                  <td className="py-4 font-medium">{creator.category}</td>
-                  <td className="py-4 flex items-center gap-2">
-                    <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200 text-[10px] font-black uppercase tracking-wider">
-                      {creator.countryCode}
-                    </span>
-                    <span className="font-bold">{creator.country}</span>
-                  </td>
-                  <td className="py-4">
-                    <span className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                      creator.risk === 'Low'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
-                    }`}>
-                      {creator.risk}
-                    </span>
-                  </td>
-                  <td className="py-4 font-bold text-slate-500">{creator.ltv}</td>
-                  <td className="py-4 text-right font-black text-slate-900">{creator.allocation}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Best Publishing Times */}
+      <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6">
+        <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-4">
+          Best Publishing Times
         </div>
+
+        {timesError && (
+          <div className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+            {timesError}
+          </div>
+        )}
+
+        {timesLoading && (
+          <div className="text-sm font-medium text-slate-500">Loading publishing times…</div>
+        )}
+
+        {!timesLoading && !timesError && (currentPublishingTimes || publishingTimes.length > 0) && (
+          <div className="space-y-6">
+            {currentPublishingTimes && (
+              <>
+                <div className="text-xs text-slate-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                  Showing optimal times for <span className="font-bold">{currentPublishingTimes.categoryName}</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Months */}
+                  <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div className="text-xs font-bold text-slate-500 uppercase mb-3">Top Months</div>
+                    <div className="space-y-2">
+                      {currentPublishingTimes.topMonths.map((m) => (
+                        <div key={m.label} className="flex justify-between items-end">
+                          <span className="text-sm font-semibold text-slate-700">{m.label}</span>
+                          <span className="text-xs font-bold text-blue-700">{m.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Days */}
+                  <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div className="text-xs font-bold text-slate-500 uppercase mb-3">Top Days</div>
+                    <div className="space-y-2">
+                      {currentPublishingTimes.topDays.map((d) => (
+                        <div key={d.label} className="flex justify-between items-end">
+                          <span className="text-sm font-semibold text-slate-700">{d.label}</span>
+                          <span className="text-xs font-bold text-blue-700">{d.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Hours */}
+                  <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div className="text-xs font-bold text-slate-500 uppercase mb-3">Top Hours</div>
+                    <div className="space-y-2">
+                      {currentPublishingTimes.topHours.map((h) => (
+                        <div key={h.label} className="flex justify-between items-end">
+                          <span className="text-sm font-semibold text-slate-700">{h.label}</span>
+                          <span className="text-xs font-bold text-blue-700">{h.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!currentPublishingTimes && (
+              <div className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
+                Scan a video first to see optimized publishing times for that category.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Regional Category Performance */}
+      <div className="bg-white/85 border border-slate-300 shadow-sm rounded-2xl p-6 overflow-hidden">
+        <div className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-5">
+          Regional Category Performance
+        </div>
+
+        {regionsError && (
+          <div className="text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+            {regionsError}
+          </div>
+        )}
+
+        {regionsLoading && (
+          <div className="text-sm font-medium text-slate-500">Loading regional data…</div>
+        )}
+
+        {!regionsLoading && !regionsError && regions.length > 0 && (
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead>
+                <tr className="text-slate-500 border-b-2 border-slate-100">
+                  <th className="pb-3 font-bold w-20">Country</th>
+                  <th className="pb-3 font-bold">Top Categories (% of trending)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {regions.map((region) => {
+                  const topCats = region.categories.slice(0, 5);
+                  const topCat = region.categories[0];
+                  return (
+                    <tr key={region.countryCode} className="text-slate-700 hover:bg-slate-50/50">
+                      <td className="py-4 font-black text-slate-900 bg-blue-50">{region.countryCode}</td>
+                      <td className="py-4">
+                        <div className="flex flex-wrap gap-2">
+                          {topCats.map((cat, idx) => (
+                            <span
+                              key={cat.categoryId}
+                              className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                                idx === 0
+                                  ? 'bg-blue-100 text-blue-900 border-blue-300'
+                                  : 'bg-slate-100 text-slate-700 border-slate-200'
+                              }`}
+                            >
+                              {cat.categoryName} <span className="font-bold">{cat.share}%</span>
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
     </div>
