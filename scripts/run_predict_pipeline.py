@@ -3,8 +3,14 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 
-# Ensure repo root is on path when run as script
+# Repo root = YTBTrendingDashboard/ ; ML modules live in ml/
+_DASH = Path(__file__).resolve().parent.parent
+_ML = _DASH / "ml"
+if str(_ML) not in sys.path:
+    sys.path.insert(0, str(_ML))
+
 if __name__ == "__main__":
     try:
         payload = json.load(sys.stdin)

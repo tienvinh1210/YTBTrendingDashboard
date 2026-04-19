@@ -40,5 +40,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# ML model + meta JSON (regenerate from repo root: python stage_1_xg_boost.py, python stage_2.py)
+# Python / ML training
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+/ml/data/*.csv
+
+# ML model + meta JSON (regenerate: see SETUP.md)
 /models/*.json
+!models/.gitkeep

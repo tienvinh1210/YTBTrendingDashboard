@@ -8,9 +8,20 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 function resolveScriptDir(): string | null {
-  const scriptPath = path.join(process.cwd(), "scripts");
-  if (fs.existsSync(path.join(scriptPath, "run_predict_pipeline.py"))) {
-    return scriptPath;
+  const candidates = [
+    process.env.DASHBOARD_ROOT
+      ? path.join(process.env.DASHBOARD_ROOT, "scripts")
+      : "",
+    path.join(process.cwd(), "scripts"),
+    path.join(process.cwd(), "YTBTrendingDashboard", "scripts"),
+    process.env.DATA_HACK_ROOT
+      ? path.join(process.env.DATA_HACK_ROOT, "YTBTrendingDashboard", "scripts")
+      : "",
+  ].filter(Boolean);
+  for (const dir of candidates) {
+    if (fs.existsSync(path.join(dir, "run_predict_pipeline.py"))) {
+      return dir;
+    }
   }
   return null;
 }
@@ -55,7 +66,9 @@ export async function POST(req: Request) {
     channel: body.channel,
   };
 
-  const py = process.env.PYTHON_PATH || "python3";
+  const py =
+    process.env.PYTHON_PATH ||
+    (process.platform === "win32" ? "python" : "python3");
   const script = path.join(scriptDir, "run_predict_pipeline.py");
   console.log("[trending-predict] Running script:", script);
   console.log("[trending-predict] With payload:", JSON.stringify(payload).slice(0, 200));
