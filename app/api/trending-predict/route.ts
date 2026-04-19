@@ -7,18 +7,39 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
+/** Walk up from `startDir` looking for `scripts/run_predict_pipeline.py` (handles odd `cwd`). */
+function findScriptsDirFromWalk(startDir: string, maxDepth = 10): string | null {
+  let cur = path.resolve(startDir);
+  for (let i = 0; i < maxDepth; i++) {
+    const scriptFile = path.join(cur, "scripts", "run_predict_pipeline.py");
+    if (fs.existsSync(scriptFile)) {
+      return path.join(cur, "scripts");
+    }
+    const parent = path.dirname(cur);
+    if (parent === cur) break;
+    cur = parent;
+  }
+  return null;
+}
+
 function resolveScriptDir(): string | null {
+  const cwd = process.cwd();
   const candidates = [
     process.env.DASHBOARD_ROOT
       ? path.join(process.env.DASHBOARD_ROOT, "scripts")
       : "",
-    path.join(process.cwd(), "scripts"),
-    path.join(process.cwd(), "YTBTrendingDashboard", "scripts"),
+    path.join(cwd, "scripts"),
+    findScriptsDirFromWalk(cwd),
+    path.join(cwd, "YTBTrendingDashboard", "scripts"),
     process.env.DATA_HACK_ROOT
       ? path.join(process.env.DATA_HACK_ROOT, "YTBTrendingDashboard", "scripts")
       : "",
-  ].filter(Boolean);
+  ].filter((p): p is string => Boolean(p));
+
+  const seen = new Set<string>();
   for (const dir of candidates) {
+    if (seen.has(dir)) continue;
+    seen.add(dir);
     if (fs.existsSync(path.join(dir, "run_predict_pipeline.py"))) {
       return dir;
     }
@@ -31,13 +52,62 @@ type Body = {
   channel?: Record<string, unknown> | null;
 };
 
+function buildPythonAttempts(script: string): [string, string[]][] {
+  const out: [string, string[]][] = [];
+  if (process.env.PYTHON_PATH?.trim()) {
+    out.push([process.env.PYTHON_PATH.trim(), [script]]);
+  }
+  if (process.platform === "win32") {
+    out.push(["python", [script]]);
+    out.push(["py", ["-3", script]]);
+    out.push(["python3", [script]]);
+  } else {
+    out.push(["python3", [script]]);
+    out.push(["python", [script]]);
+  }
+  return out;
+}
+
+function runPredictor(
+  cmd: string,
+  args: string[],
+  cwd: string,
+  stdinBody: string,
+  extraEnv: NodeJS.ProcessEnv
+): Promise<{ code: number; stdout: string; stderr: string; spawnErr?: string }> {
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, {
+      cwd,
+      stdio: ["pipe", "pipe", "pipe"],
+      env: extraEnv,
+    });
+    let out = "";
+    let err = "";
+    let spawnErr: string | undefined;
+    child.stdout?.on("data", (c: Buffer) => {
+      out += c.toString("utf8");
+    });
+    child.stderr?.on("data", (c: Buffer) => {
+      err += c.toString("utf8");
+    });
+    child.on("error", (e: NodeJS.ErrnoException) => {
+      spawnErr = e.code === "ENOENT" ? `${cmd}: not found on PATH` : e.message;
+    });
+    child.on("close", (exitCode) => {
+      resolve({ stdout: out, stderr: err, code: exitCode ?? 0, spawnErr });
+    });
+    child.stdin?.write(stdinBody, "utf8");
+    child.stdin?.end();
+  });
+}
+
 export async function POST(req: Request) {
   const scriptDir = resolveScriptDir();
   if (!scriptDir) {
     return NextResponse.json(
       {
-        error:
-          "Could not find scripts directory with run_predict_pipeline.py. Ensure the project is properly set up.",
+        error: "Could not find scripts/run_predict_pipeline.py.",
+        hint: "Run `npm run dev` from the YTBTrendingDashboard folder, or set DASHBOARD_ROOT to that folder. cwd was: " + process.cwd(),
       },
       { status: 500 }
     );
@@ -54,81 +124,88 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing video object" }, { status: 400 });
   }
 
-  if (!body.channel) {
-    return NextResponse.json(
-      { error: "Prediction unavailable: Channel data required. Try another video or check the YouTube API key." },
-      { status: 400 }
-    );
-  }
+  const v = body.video as Record<string, unknown>;
+  const channel =
+    body.channel && typeof body.channel === "object"
+      ? body.channel
+      : {
+          id: (v.channelId as string) ?? "",
+          title: (v.channelTitle as string) ?? "unknown",
+          country: null,
+          subscriberCount: 0,
+          viewCount: 0,
+          videoCount: 0,
+        };
 
-  const payload = {
-    video: body.video,
-    channel: body.channel,
+  const payload = { video: body.video, channel };
+
+  const script = path.join(scriptDir, "run_predict_pipeline.py");
+  const mlDir = path.join(scriptDir, "..", "ml");
+  const baseEnv = {
+    ...process.env,
+    PYTHONUTF8: "1",
+    PYTHONUNBUFFERED: "1",
+    PYTHONPATH: [mlDir, process.env.PYTHONPATH].filter(Boolean).join(path.delimiter),
   };
 
-  const py =
-    process.env.PYTHON_PATH ||
-    (process.platform === "win32" ? "python" : "python3");
-  const script = path.join(scriptDir, "run_predict_pipeline.py");
-  console.log("[trending-predict] Running script:", script);
-  console.log("[trending-predict] With payload:", JSON.stringify(payload).slice(0, 200));
+  const stdinJson = JSON.stringify(payload);
+  const attempts = buildPythonAttempts(script);
+  const tried: string[] = [];
+  let lastStdout = "";
+  let lastStderr = "";
+  let lastSpawnErr: string | undefined;
 
-  const { stdout, stderr, code } = await new Promise<{ stdout: string; stderr: string; code: number }>((resolve) => {
-    const child = spawn(py, [script], {
-      cwd: scriptDir,
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env, PYTHONUTF8: "1", PYTHONUNBUFFERED: "1" },
-    });
-    let out = "";
-    let err = "";
-    child.stdout?.on("data", (c: Buffer) => {
-      out += c.toString("utf8");
-    });
-    child.stderr?.on("data", (c: Buffer) => {
-      err += c.toString("utf8");
-    });
-    child.on("close", (exitCode) => {
-      resolve({ stdout: out, stderr: err, code: exitCode || 0 });
-    });
-    child.on("error", (e) => {
-      resolve({ stdout: "", stderr: e.message, code: 1 });
-    });
-    child.stdin?.write(JSON.stringify(payload), "utf8");
-    child.stdin?.end();
-  });
+  const modelHint =
+    "Ensure models/stage1_xgb.json + stage1_meta.json (+ stage2) exist under models/. From repo root: pip install -r requirements.txt && python ml/stage_1_xg_boost.py && python ml/stage_2.py";
 
-  if (code !== 0) {
-    console.error("[trending-predict] Exit code:", code);
-    console.error("[trending-predict] Stderr:", stderr);
-    console.error("[trending-predict] Stdout:", stdout);
-    return NextResponse.json(
-      { error: "Prediction failed", detail: (stderr || stdout).slice(0, 500) },
-      { status: 502 }
+  for (const [cmd, args] of attempts) {
+    tried.push([cmd, ...args].join(" "));
+    const { code, stdout, stderr, spawnErr } = await runPredictor(
+      cmd,
+      args,
+      scriptDir,
+      stdinJson,
+      baseEnv
     );
+    lastStdout = stdout;
+    lastStderr = stderr;
+    lastSpawnErr = spawnErr;
+
+    const text = stdout.trim();
+    if (text) {
+      try {
+        const parsed: unknown = JSON.parse(text);
+        if (parsed && typeof parsed === "object" && "error" in parsed) {
+          return NextResponse.json(
+            { ...(parsed as Record<string, unknown>), hint: modelHint },
+            { status: 502 }
+          );
+        }
+        if (code === 0) {
+          return NextResponse.json(parsed);
+        }
+      } catch {
+        if (code === 0) {
+          return NextResponse.json(
+            { error: "Invalid JSON from predictor", detail: text.slice(0, 500) },
+            { status: 502 }
+          );
+        }
+      }
+    }
+
+    if (spawnErr && !text) {
+      continue;
+    }
   }
 
-  if (!stdout.trim()) {
-    console.error("[trending-predict] No output from Python script");
-    return NextResponse.json(
-      { error: "Prediction unavailable: No output from model" },
-      { status: 502 }
-    );
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stdout.trim());
-  } catch {
-    console.error("[trending-predict] JSON parse error:", stdout.slice(0, 200));
-    return NextResponse.json(
-      { error: "Invalid JSON from predictor", detail: stdout.slice(0, 500) },
-      { status: 502 }
-    );
-  }
-
-  if (parsed && typeof parsed === "object" && "error" in parsed) {
-    return NextResponse.json(parsed, { status: 502 });
-  }
-
-  return NextResponse.json(parsed);
+  const detail = [lastSpawnErr, lastStderr, lastStdout].filter(Boolean).join("\n").slice(0, 800);
+  return NextResponse.json(
+    {
+      error: "Prediction failed (Python did not return a valid result).",
+      detail,
+      hint: `Tried: ${tried.join(" | ")}. ${modelHint} Set PYTHON_PATH if python is not on PATH.`,
+    },
+    { status: 502 }
+  );
 }

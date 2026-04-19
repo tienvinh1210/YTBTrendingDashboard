@@ -56,4 +56,12 @@ npm run dev
 
 ## 4. Predictions
 
-Video Overview calls **`POST /api/trending-predict`**, which runs **`scripts/run_predict_pipeline.py`** with `cwd` = `scripts/`. That script adds **`ml/`** to `PYTHONPATH` and imports the stage modules.
+Video Overview calls **`POST /api/trending-predict`**, which runs **`scripts/run_predict_pipeline.py`** with `cwd` = `scripts/`. The API also sets **`PYTHONPATH`** to the **`ml/`** folder so imports work on a clean machine.
+
+### If prediction fails on another computer
+
+1. Run **`npm run dev` from this repo root** (the folder that contains `package.json` and `scripts/`). If you start Next elsewhere, set **`DASHBOARD_ROOT`** to the absolute path of this repo.
+2. Install Python deps: **`pip install -r requirements.txt`** (same machine where Node runs, or set **`PYTHON_PATH`** to that interpreter).
+3. Ensure **`models/*.json`** exists (train with `python ml/stage_1_xg_boost.py` etc., or copy the four files).
+4. On Windows, if `python` is missing, install Python 3.10+ from python.org and tick “Add to PATH”, or set **`PYTHON_PATH`** to the full path of `python.exe`.
+5. Read the error text on Video Overview — it now includes **detail** (stderr / Python message) and a short **hint**.

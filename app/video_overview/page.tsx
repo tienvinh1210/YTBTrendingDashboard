@@ -122,9 +122,14 @@ function VideoOverviewContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ video: data.video, channel: data.channel }),
       });
-      const predJson = (await pr.json()) as PipelineResult | { error: string };
+      const predJson = (await pr.json()) as
+        | PipelineResult
+        | { error: string; detail?: string; hint?: string };
       if (!pr.ok || "error" in predJson) {
-        const msg = "error" in predJson ? predJson.error : "Model prediction failed.";
+        const pe = predJson as { error: string; detail?: string; hint?: string };
+        let msg = pe.error || "Model prediction failed.";
+        if (pe.detail) msg += ` — ${String(pe.detail).slice(0, 500)}`;
+        if (pe.hint) msg += ` (${String(pe.hint).slice(0, 400)})`;
         setPredictNote(msg);
         setPipeline(null);
       } else {
