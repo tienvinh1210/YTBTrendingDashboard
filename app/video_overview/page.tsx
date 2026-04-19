@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type VideoInfo = {
   id: string;
@@ -86,24 +87,27 @@ const dateFmt = new Intl.DateTimeFormat("en-US", {
 
 const STORAGE_KEY = "yourisk:lastScan";
 
-export default function VideoOverview() {
+function VideoOverviewContent() {
+  const searchParams = useSearchParams();
   const [url, setUrl] = useState("");
   const [video, setVideo] = useState<VideoInfo | null>(null);
   const [pipeline, setPipeline] = useState<PipelineResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [predictNote, setPredictNote] = useState<string | null>(null);
+  const autoScannedRef = useRef<string | null>(null);
 
   const hasData = !!video;
 
-  async function handleScan() {
-    if (!url.trim() || loading) return;
+  async function handleScan(urlOverride?: string) {
+    const target = (urlOverride ?? url).trim();
+    if (!target || loading) return;
     setLoading(true);
     setError(null);
     setPredictNote(null);
     setPipeline(null);
     try {
-      const res = await fetch(`/api/youtube?url=${encodeURIComponent(url)}`);
+      const res = await fetch(`/api/youtube?url=${encodeURIComponent(target)}`);
       const data = (await res.json()) as
         | { video: VideoInfo; channel: ChannelInfo | null }
         | { error: string };
@@ -142,6 +146,16 @@ export default function VideoOverview() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const fromQuery = searchParams.get("url");
+    if (!fromQuery) return;
+    if (autoScannedRef.current === fromQuery) return;
+    autoScannedRef.current = fromQuery;
+    setUrl(fromQuery);
+    handleScan(fromQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <>
@@ -429,7 +443,7 @@ export default function VideoOverview() {
           />
           <button
             className="vo-btn"
-            onClick={handleScan}
+            onClick={() => handleScan()}
             disabled={loading || !url.trim()}
             style={loading || !url.trim() ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
           >
@@ -582,5 +596,13 @@ export default function VideoOverview() {
         )}
       </div>
     </>
+  );
+}
+
+export default function VideoOverview() {
+  return (
+    <Suspense fallback={null}>
+      <VideoOverviewContent />
+    </Suspense>
   );
 }

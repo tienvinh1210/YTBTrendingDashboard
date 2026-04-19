@@ -39,6 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# ML model + meta JSON (regenerate from repo root: python stage_1_xg_boost.py, python stage_2.py)
-/models/*.json
